@@ -1,0 +1,103 @@
+{
+  "setup": {
+    "timestamp": "2026-09-29 01:03:33",
+    "os": "Windows-10-10.0.26200-SP0",
+    "python": "3.11.9",
+    "cpu": "13th Gen Intel(R) Core(TM) i7-13650HX",
+    "cpu_cores_physical": 14,
+    "cpu_cores_logical": 20,
+    "ram_gb": 23.7,
+    "on_ac_power": true,
+    "power_plan": "Balanced",
+    "gpu": {
+      "name": "NVIDIA GeForce RTX 4060 Laptop GPU",
+      "driver": "560.94",
+      "total_mib": 8188,
+      "used_mib_now": 4298
+    },
+    "packages": {
+      "torch": "2.14.0+cpu",
+      "transformers": "5.16.1",
+      "sentence-transformers": "6.1.0",
+      "gliner": "0.2.29",
+      "huggingface-hub": "1.33.0",
+      "tokenizers": "0.23.2",
+      "chromadb": "1.5.9",
+      "rank-bm25": "0.2.2",
+      "pypdfium2": "5.13.0",
+      "pdfplumber": "0.11.10",
+      "pymupdf": "1.28.2",
+      "ollama": "0.6.2",
+      "numpy": "2.4.6",
+      "psutil": "7.2.2",
+      "nvidia-ml-py": "13.615.71",
+      "pyyaml": "6.0.3",
+      "pytest": "9.1.1"
+    }
+  },
+  "model": "qwen3:4b-instruct-2507-q4_K_M",
+  "options": {
+    "num_ctx": 4096,
+    "temperature": 0.0,
+    "num_predict": 256,
+    "seed": 0
+  },
+  "cold_run": {
+    "ttft_ms": 3254.2,
+    "total_ms": 4462.6,
+    "prompt_tokens": 1684,
+    "output_tokens": 61,
+    "tokens_per_second": 50.6,
+    "load_ms": 2103.0
+  },
+  "warm_runs": {
+    "ttft_ms": {
+      "n": 10,
+      "median_ms": 1360.8,
+      "p95_ms": 1703.8,
+      "min_ms": 916.2,
+      "max_ms": 1712.7
+    },
+    "total_ms": {
+      "n": 10,
+      "median_ms": 2147.0,
+      "p95_ms": 3075.4,
+      "min_ms": 1778.2,
+      "max_ms": 3201.8
+    },
+    "tokens_per_second": {
+      "n": 10,
+      "median_ms": 53.9,
+      "p95_ms": 59.3,
+      "min_ms": 50.1,
+      "max_ms": 61.6
+    },
+    "prompt_tokens": {
+      "n": 10,
+      "median_ms": 1904.5,
+      "p95_ms": 2474.8,
+      "min_ms": 1181,
+      "max_ms": 2540
+    },
+    "output_tokens": {
+      "n": 10,
+      "median_ms": 47.5,
+      "p95_ms": 90.5,
+      "min_ms": 5,
+      "max_ms": 104
+    }
+  },
+  "gpu_memory": {
+    "baseline_mib": 1149,
+    "peak_mib": 4298,
+    "delta_mib": 3149,
+    "samples": 590
+  },
+  "placement": {
+    "size_mb": 3031,
+    "size_vram_mb": 3031,
+    "gpu_fraction": 1.0
+  },
+  "think_tag_seen": false,
+  "sample_answer": "I cannot answer the question. The provided passages do not contain information about 3M's total net sales in fiscal year 2018. [p. 2] mentions the structure of the Form 10-K and references financial statements, but it does not provide specific sales figures."
+}

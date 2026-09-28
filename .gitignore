@@ -1,0 +1,28 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+build/
+dist/
+
+# Virtual environment
+.venv/
+
+# Models and data stay local (large files, some with non-commercial licenses)
+models/*
+!models/README.md
+data/*
+!data/README.md
+
+# Local settings
+.env
+
+# Editors and OS
+.vscode/
+.idea/
+Thumbs.db
+.DS_Store
+
+# Local tools (Ollama standalone build)
+tools/

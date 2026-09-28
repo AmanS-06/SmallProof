@@ -1,0 +1,100 @@
+{
+  "setup": {
+    "timestamp": "2026-09-28 23:18:02",
+    "os": "Windows-10-10.0.26200-SP0",
+    "python": "3.11.9",
+    "cpu": "13th Gen Intel(R) Core(TM) i7-13650HX",
+    "cpu_cores_physical": 14,
+    "cpu_cores_logical": 20,
+    "ram_gb": 23.7,
+    "on_ac_power": true,
+    "power_plan": "Balanced",
+    "gpu": {
+      "name": "NVIDIA GeForce RTX 4060 Laptop GPU",
+      "driver": "560.94",
+      "total_mib": 8188,
+      "used_mib_now": 1115
+    },
+    "packages": {
+      "torch": "2.14.0+cpu",
+      "transformers": "5.16.1",
+      "sentence-transformers": "6.1.0",
+      "gliner": "0.2.29",
+      "huggingface-hub": "1.33.0",
+      "tokenizers": "0.23.2",
+      "chromadb": "1.5.9",
+      "rank-bm25": "0.2.2",
+      "pypdfium2": "5.13.0",
+      "pdfplumber": "0.11.10",
+      "pymupdf": "1.28.2",
+      "ollama": "0.6.2",
+      "numpy": "2.4.6",
+      "psutil": "7.2.2",
+      "nvidia-ml-py": "13.615.71",
+      "pyyaml": "6.0.3",
+      "pytest": "9.1.1"
+    }
+  },
+  "checks": [
+    {
+      "check": "python 3.11",
+      "status": "ok",
+      "detail": "3.11.9"
+    },
+    {
+      "check": "key packages installed",
+      "status": "ok",
+      "detail": ""
+    },
+    {
+      "check": "torch is CPU-only",
+      "status": "ok",
+      "detail": "2.14.0+cpu"
+    },
+    {
+      "check": "no CUDA packages",
+      "status": "ok",
+      "detail": ""
+    },
+    {
+      "check": "hf CLI installed",
+      "status": "ok",
+      "detail": "D:\\SLM_Jev_Rag\\.venv\\Scripts\\hf.exe"
+    },
+    {
+      "check": "model classifier",
+      "status": "ok",
+      "detail": "loads offline"
+    },
+    {
+      "check": "model extractor",
+      "status": "ok",
+      "detail": "loads offline"
+    },
+    {
+      "check": "model extractor_tokenizer",
+      "status": "ok",
+      "detail": "downloaded"
+    },
+    {
+      "check": "model embedder",
+      "status": "ok",
+      "detail": "loads offline"
+    },
+    {
+      "check": "model reranker",
+      "status": "ok",
+      "detail": "loads offline"
+    },
+    {
+      "check": "no models in C: HF cache",
+      "status": "ok",
+      "detail": "C:\\Users\\AMAN\\.cache\\huggingface\\hub: 0.0 MB"
+    },
+    {
+      "check": "Ollama reachable",
+      "status": "missing",
+      "detail": "ConnectionError: Failed to connect to Ollama. Please check that Ollama is downloaded, running and accessible. https://ollama.com/download"
+    }
+  ]
+}

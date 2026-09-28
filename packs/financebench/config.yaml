@@ -1,0 +1,41 @@
+# FinanceBench pack. Merged on top of configs/default.yaml.
+# Data: FinanceBench open sample (150 questions, CC BY-NC 4.0). Not committed; built by prepare.py.
+
+data:
+  raw_dir: data/raw/financebench
+  eval_set: data/raw/financebench/eval.jsonl
+  manifest: data/raw/financebench/manifest.json
+  pdf_dir: data/raw/financebench/pdfs
+
+vocab:
+  # Section headings in 10-K style filings. Group 1 is the section name.
+  section_patterns:
+    - '^\s*(item\s+\d{1,2}[a-c]?)\b'
+    - '^\s*(consolidated\s+statements?\s+of\s+(?:income|operations|earnings|cash\s+flows|comprehensive\s+income))'
+    - '^\s*(consolidated\s+balance\s+sheets?)'
+
+tags:
+  entity_types: [company, financial metric, year]
+  section_template: "This question is about the {}."
+  sections: # tag label -> words that must appear in a chunk's section name
+    income statement: [income, operations, earnings]
+    balance sheet: [balance sheet]
+    cash flow statement: [cash flows]
+    management discussion and analysis: [item 7]
+    risk factors: [item 1a]
+
+router:
+  # PROVISIONAL intents drafted with an LLM. The brief says Aman defines these; replace when available.
+  template: "{}"
+  intents:
+    metric_lookup: This question asks for a specific reported financial figure.
+    calculation: This question asks to calculate a ratio, margin, growth rate or difference.
+    explanation: This question asks about reasons, risks, strategy or a business description.
+  chunk_types: # which chunk types each intent boosts
+    metric_lookup: [table, numeric]
+    calculation: [table, numeric]
+    explanation: [narrative, definition]
+
+gate: # calibrated on the dev split (80 questions) by `api.cli calibrate`
+  sufficient_threshold: 0.0
+  partial_threshold: 0.0

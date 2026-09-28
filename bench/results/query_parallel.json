@@ -1,0 +1,78 @@
+{
+  "setup": {
+    "timestamp": "2026-09-29 01:00:52",
+    "os": "Windows-10-10.0.26200-SP0",
+    "python": "3.11.9",
+    "cpu": "13th Gen Intel(R) Core(TM) i7-13650HX",
+    "cpu_cores_physical": 14,
+    "cpu_cores_logical": 20,
+    "ram_gb": 23.7,
+    "on_ac_power": true,
+    "power_plan": "Balanced",
+    "gpu": {
+      "name": "NVIDIA GeForce RTX 4060 Laptop GPU",
+      "driver": "560.94",
+      "total_mib": 8188,
+      "used_mib_now": 1149
+    },
+    "packages": {
+      "torch": "2.14.0+cpu",
+      "transformers": "5.16.1",
+      "sentence-transformers": "6.1.0",
+      "gliner": "0.2.29",
+      "huggingface-hub": "1.33.0",
+      "tokenizers": "0.23.2",
+      "chromadb": "1.5.9",
+      "rank-bm25": "0.2.2",
+      "pypdfium2": "5.13.0",
+      "pdfplumber": "0.11.10",
+      "pymupdf": "1.28.2",
+      "ollama": "0.6.2",
+      "numpy": "2.4.6",
+      "psutil": "7.2.2",
+      "nvidia-ml-py": "13.615.71",
+      "pyyaml": "6.0.3",
+      "pytest": "9.1.1"
+    }
+  },
+  "results": [
+    {
+      "torch_threads": 4,
+      "load_all_ms": 2252.2,
+      "sequential": {
+        "n": 20,
+        "median_ms": 1117.99,
+        "p95_ms": 1202.69,
+        "min_ms": 956.92,
+        "max_ms": 1235.43
+      },
+      "parallel": {
+        "n": 20,
+        "median_ms": 1208.67,
+        "p95_ms": 1293.09,
+        "min_ms": 1083.18,
+        "max_ms": 1299.4
+      },
+      "peak_ram_mb": 1704.2
+    },
+    {
+      "torch_threads": 2,
+      "load_all_ms": 2242.6,
+      "sequential": {
+        "n": 20,
+        "median_ms": 1995.22,
+        "p95_ms": 2155.18,
+        "min_ms": 1749.24,
+        "max_ms": 2177.35
+      },
+      "parallel": {
+        "n": 20,
+        "median_ms": 1926.73,
+        "p95_ms": 2086.36,
+        "min_ms": 1698.84,
+        "max_ms": 2088.77
+      },
+      "peak_ram_mb": 1704.2
+    }
+  ]
+}

@@ -1,0 +1,98 @@
+# Default stack config. A pack's config.yaml is merged on top of this file.
+# Model candidates verified on Hugging Face and the Ollama library on 2026-09-27.
+
+offline: true # never download models at run time
+
+runtime:
+  torch_threads: 4 # of 14 cores: keeps the laptop cool (slower, on purpose)
+  thermal: # see core/thermal.py
+    max_gpu_c: 80 # pause above this GPU temperature
+    resume_gpu_c: 70 # resume below this
+    work_seconds: 60 # duty cycle: work this long ...
+    rest_seconds: 30 # ... then rest this long
+    max_job_minutes: 25 # hard stop per job; jobs resume when run again
+  ollama: # see core/ollama_server.py
+    exe: tools/ollama/ollama.exe
+    models_dir: models/ollama
+    keep_alive: 1m # unload the model from the GPU after 1 minute idle
+    max_server_minutes: 25 # watchdog: the server is killed after this long
+
+paths:
+  models_dir: models/hf # Hugging Face cache (HF_HOME)
+  data_dir: data
+  index_dir: data/indexes
+
+models:
+  classifier:
+    repo_id: MoritzLaurer/ModernBERT-base-zeroshot-v2.0
+    revision: d421c4545a438fd006fb43f8b981c5d908faa1e1
+    download_gb: 0.30
+    license: apache-2.0
+  extractor:
+    repo_id: urchade/gliner_small-v2.1
+    revision: 4e091416cf7c3481db542c2a3d26156916f3a47f
+    download_gb: 0.61
+    license: apache-2.0
+  extractor_tokenizer: # GLiNER loads its tokenizer from this backbone name (no weights needed)
+    repo_id: microsoft/deberta-v3-small
+    revision: main # GLiNER looks it up by name, so the cache needs the "main" reference
+    download_gb: 0.003
+    license: mit
+  embedder:
+    repo_id: BAAI/bge-small-en-v1.5
+    revision: 5c38ec7c405ec4b44b94cc5a9bb96e735b38267a
+    download_gb: 0.14
+    license: mit
+  reranker:
+    repo_id: cross-encoder/ms-marco-MiniLM-L6-v2
+    revision: 233902d25c440f23af6f7d6e94d2946bac0bee0a
+    download_gb: 0.09
+    license: apache-2.0
+
+parser:
+  text_backend: pypdfium2 # permissive license; pymupdf is AGPL
+  tables: false # pdfplumber tables as extra chunks (slow; see Phase 0 results)
+
+chunker:
+  target_tokens: 350
+  overlap_tokens: 50
+  min_tokens: 25
+
+tagger:
+  backend: rules # rules or zeroshot
+  template: "This text is {}."
+  labels:
+    table: a table of figures
+    definition: a definition of a term
+    numeric: a report of financial numbers
+    narrative: a narrative description
+
+embedder:
+  batch_size: 32
+  query_instruction: "Represent this sentence for searching relevant passages: "
+
+retrieval:
+  bm25_k: 50
+  dense_k: 50
+  rrf_k: 60
+  fused_k: 30
+  tag_boost: 1.0 # each confident tag match doubles a chunk's score (soft: nothing is removed)
+  tag_min_confidence: 0.5 # below this, a tag is ignored (unfiltered search)
+
+reranker:
+  top_k: 5
+
+gate:
+  backend: nli_rerank
+  sufficient_threshold: 0.5 # calibrated on the dev split in Phase 4
+  partial_threshold: 0.2
+  widen_factor: 2 # widen once: this many times more candidates, no tag boosts
+
+generator:
+  backend: ollama
+  model: qwen3:4b-instruct-2507-q4_K_M
+  host: http://127.0.0.1:11434
+  num_ctx: 4096
+  temperature: 0.0
+  num_predict: 256
+  template: generate/prompts/answer.txt

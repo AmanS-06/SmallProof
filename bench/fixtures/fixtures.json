@@ -1,0 +1,57 @@
+{
+  "_note": "Hand-written inputs for the Phase 0 benchmarks. Questions have no answers attached. Chunk and entity examples are synthetic text with invented companies and numbers, used only for latency and a sanity check. latency_labels are generic topics for timing label counts; they are NOT the router labels (Aman defines those in Phase 3).",
+  "questions": [
+    "What was 3M's total net sales in fiscal year 2018?",
+    "How much did 3M spend on capital expenditures in 2018?",
+    "What was 3M's gross margin in 2018?",
+    "Which business segments did 3M report in 2018?",
+    "What was 3M's research, development and related expense in 2018?",
+    "How much did 3M pay in dividends in 2018?",
+    "What does 3M say about its exposure to foreign currency exchange rates?",
+    "What were 3M's diluted earnings per share in 2018?",
+    "What legal proceedings did 3M disclose in its 2018 annual report?",
+    "How did 3M's operating income change from 2017 to 2018?"
+  ],
+  "latency_labels": [
+    "revenue", "profit margin", "capital expenditure", "dividends", "debt", "cash flow",
+    "earnings per share", "operating income", "segment results", "legal proceedings", "risk factors",
+    "foreign exchange", "taxes", "pensions", "acquisitions", "share repurchases",
+    "research and development", "inventory", "goodwill", "restructuring", "guidance", "liquidity",
+    "credit rating", "employees", "environmental liabilities", "leases", "accounting policies",
+    "executive compensation", "supply chain", "customers", "competition", "interest expense"
+  ],
+  "chunk_types": {
+    "template": "This text is {}.",
+    "labels": {
+      "table": "a table of figures",
+      "definition": "a definition of a term",
+      "numeric": "a report of financial numbers",
+      "narrative": "a narrative description"
+    }
+  },
+  "chunk_type_examples": [
+    {"type": "table", "text": "(Millions) | 2018 | 2017 | 2016\nSegment A | 1,200 | 1,150 | 1,100\nSegment B | 850 | 820 | 790\nSegment C | 430 | 410 | 400\nTotal | 2,480 | 2,380 | 2,290"},
+    {"type": "table", "text": "Quarter | Net sales | Gross profit | Operating income\nFirst | 510 | 240 | 110\nSecond | 530 | 250 | 118\nThird | 525 | 247 | 115\nFourth | 540 | 255 | 121"},
+    {"type": "table", "text": "Year ended December 31 | 2018 | 2017\nCash and equivalents | 2,850 | 3,050\nMarketable securities | 380 | 1,080\nTotal debt | 13,400 | 12,100"},
+    {"type": "definition", "text": "Free cash flow is defined as net cash provided by operating activities less purchases of property, plant and equipment."},
+    {"type": "definition", "text": "The term organic sales growth refers to the change in net sales excluding the effects of acquisitions, divestitures and foreign currency translation."},
+    {"type": "numeric", "text": "Net sales increased 3.5 percent to $1,240 million, while operating margin declined 0.8 percentage points to 21.4 percent."},
+    {"type": "numeric", "text": "Diluted earnings per share were $9.10, up 12 percent, and the effective tax rate was 23.4 percent compared with 35.5 percent a year earlier."},
+    {"type": "numeric", "text": "Capital spending totaled $1.6 billion and the company returned $6.0 billion to shareholders through dividends and share repurchases."},
+    {"type": "narrative", "text": "The company continued to invest in its manufacturing footprint and expects demand in its core markets to remain stable. Management believes its diversified portfolio positions it well for the coming years."},
+    {"type": "narrative", "text": "Our employees worked closely with customers around the world to develop new products, and we remain committed to operating responsibly in the communities where we do business."}
+  ],
+  "entity_types": ["company", "year", "financial metric", "money", "location"],
+  "entity_sentences": [
+    "Acme Industrial reported revenue of $4.2 billion in fiscal 2018.",
+    "Northwind Corp opened a new plant in Ohio in 2017.",
+    "Operating income at Globex fell to $310 million in 2019.",
+    "Initech paid dividends of $1.20 per share during 2018.",
+    "Stark Materials expanded its research center in Singapore.",
+    "Free cash flow at Umbrella Holdings reached $900 million last year.",
+    "Wayne Tools cut capital expenditures by 15 percent in 2020.",
+    "Hooli acquired a software firm based in Berlin for $250 million.",
+    "Gross margin at Vandelay Imports improved to 38 percent in 2018.",
+    "Soylent Foods reported net income of $75 million for fiscal year 2016."
+  ]
+}

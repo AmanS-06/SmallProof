@@ -1,0 +1,64 @@
+{
+  "setup": {
+    "timestamp": "2026-09-28 19:26:02",
+    "os": "Windows-10-10.0.26200-SP0",
+    "python": "3.11.9",
+    "cpu": "13th Gen Intel(R) Core(TM) i7-13650HX",
+    "cpu_cores_physical": 14,
+    "cpu_cores_logical": 20,
+    "ram_gb": 23.7,
+    "on_ac_power": true,
+    "power_plan": "Balanced",
+    "gpu": {
+      "name": "NVIDIA GeForce RTX 4060 Laptop GPU",
+      "driver": "560.94",
+      "total_mib": 8188,
+      "used_mib_now": 890
+    },
+    "packages": {
+      "torch": "2.14.0+cpu",
+      "transformers": "5.16.1",
+      "sentence-transformers": "6.1.0",
+      "gliner": "0.2.29",
+      "huggingface-hub": "1.33.0",
+      "tokenizers": "0.23.2",
+      "chromadb": "1.5.9",
+      "rank-bm25": "0.2.2",
+      "pypdfium2": "5.13.0",
+      "pdfplumber": "0.11.10",
+      "pymupdf": "1.28.2",
+      "ollama": "0.6.2",
+      "numpy": "2.4.6",
+      "psutil": "7.2.2",
+      "nvidia-ml-py": "13.615.71",
+      "pyyaml": "6.0.3",
+      "pytest": "9.1.1"
+    }
+  },
+  "libraries": {
+    "torch": "Apache-2.0 AND Apache-2.0 WITH LLVM-exception AND BSD-2-Clause AND BSD-3-Clause AND BSL-1.0 AND MIT",
+    "transformers": "Apache 2.0 License",
+    "sentence-transformers": "Apache-2.0",
+    "gliner": "Apache-2.0",
+    "huggingface-hub": "Apache Software License",
+    "tokenizers": "Apache Software License",
+    "chromadb": "Apache Software License",
+    "rank-bm25": "Apache2.0",
+    "pypdfium2": "BSD-3-Clause, Apache-2.0, dependency licenses",
+    "pdfplumber": "MIT License",
+    "pymupdf": "Dual Licensed - GNU AFFERO GPL 3.0 or Artifex Commercial Lic",
+    "ollama": "MIT",
+    "numpy": "BSD-3-Clause AND 0BSD AND MIT AND Zlib AND CC0-1.0",
+    "psutil": "BSD-3-Clause",
+    "nvidia-ml-py": "BSD License",
+    "pyyaml": "MIT License",
+    "pytest": "MIT"
+  },
+  "models": {
+    "MoritzLaurer/ModernBERT-base-zeroshot-v2.0": "apache-2.0",
+    "urchade/gliner_small-v2.1": "apache-2.0",
+    "microsoft/deberta-v3-small": "mit",
+    "BAAI/bge-small-en-v1.5": "mit",
+    "cross-encoder/ms-marco-MiniLM-L6-v2": "apache-2.0"
+  }
+}
