@@ -95,4 +95,5 @@ generator:
   num_ctx: 4096
   temperature: 0.0
   num_predict: 256
+  table_years: false # label multi-year table values with their year (generate/table_years.py)
   template: generate/prompts/answer.txt

@@ -93,6 +93,11 @@ needs a calculation.
     with the evidence present, only 1 or 2 were arithmetic slips; the rest
     picked the wrong figure or period.
 
+12. Year labels on multi-year table values (generate/table_years.py, config
+    generator.table_years) tested on dev and turned off: accuracy 0.38 to
+    0.36, hallucination 0.20 to 0.26. The SLM answered more often but not
+    better. Kept in the code, off by default.
+
 ### Still open for Aman
 
 - Package name (then move to src/<name>/ and add pyproject.toml).

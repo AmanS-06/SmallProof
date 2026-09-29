@@ -118,7 +118,7 @@ class Pipeline:
         from generate.ollama_backend import OllamaGenerator
 
         settings = self.config["generator"]
-        keys = ("model", "host", "num_ctx", "temperature", "num_predict")
+        keys = ("model", "host", "num_ctx", "temperature", "num_predict", "table_years")
         keep_alive = get(self.config, "runtime.ollama.keep_alive", "1m")
         return self._lazy("generator", lambda: OllamaGenerator(keep_alive=keep_alive,
                                                                **{key: settings[key] for key in keys if key in settings}))
