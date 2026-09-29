@@ -124,6 +124,8 @@ Answers: dev accuracy 0.26 to 0.38, test 0.36 to 0.39. The cost is more attempte
 answers that go wrong (hallucination 0.16 to 0.20 on dev, 0.21 to 0.27 on test):
 the 4B model now sees the statement and sometimes misreads a column or a ratio.
 Turn it off with the `C_lean_no_statements` variant or `statements: {}` in the pack.
+On the 30 unanswerable questions it still refuses 29 (the slots need a confident
+company tag, which a company outside the corpus never gets).
 
 On 30 unanswerable questions (company not in the corpus) the systems refused
 29 to 30. Metadata tags are the component that matters most for retrieval.
