@@ -82,6 +82,17 @@ needs a calculation.
 9. Heat: 4 threads, 60/30 s duty cycle, GPU pause at 80 C, 25 min job limit,
    Ollama watchdog and job-object tie (see README).
 
+10. 2026-09-30: statement slots (query/statement_pages.py, on by default in
+    C_lean and C_full). Measured on dev before test. Dev: evidence in top 5
+    0.46 to 0.62, accuracy 0.26 to 0.38, refusals 0.58 to 0.42, hallucination
+    0.16 to 0.20. Test: evidence 0.48 to 0.61, accuracy 0.36 to 0.39,
+    hallucination 0.21 to 0.27. Kept on: accuracy rises on both splits; the
+    extra wrong answers are the SLM misreading statement tables. The keyword
+    lists were drafted from test failures, then checked on dev.
+11. Calculator post-check considered and dropped: of 11 wrong numeric answers
+    with the evidence present, only 1 or 2 were arithmetic slips; the rest
+    picked the wrong figure or period.
+
 ### Still open for Aman
 
 - Package name (then move to src/<name>/ and add pyproject.toml).

@@ -24,7 +24,9 @@ Query (per question)
      (company, year, section), intent label (router)
   2. Hybrid retrieval: BM25 + dense, plus an extra search inside the tagged filing,
      merged with reciprocal rank fusion
-  3. Soft boosts from confident tags (nothing is filtered out), then the MiniLM reranker
+  3. Soft boosts from confident tags (nothing is filtered out), then the MiniLM reranker;
+     when the question needs a primary statement (balance sheet, income or cash flow)
+     of the tagged filing, that page gets one of the last two slots of the top 5
   4. Evidence gate (score threshold calibrated on dev): widen once, then refuse
   5. The SLM (Qwen3 4B Instruct, Ollama, GPU) answers from the top 5 chunks, citing pages
 ```
@@ -111,6 +113,17 @@ first four rows ran before the 4-thread cap was introduced.
 | B: dense RAG | 0.30 (0.21 to 0.39) | 0.57 | 0.13 | 0.36 | 2.0 s |
 | C: full system | 0.33 (0.24 to 0.42) | 0.48 | 0.19 | 0.46 | 6.1 s |
 | C_lean: without router and GLiNER | 0.36 (0.27 to 0.46) | 0.43 | 0.21 | 0.48 | 5.2 s |
+| C_lean + statement slots (2026-09-30, default) | 0.39 (0.30 to 0.49) | 0.34 | 0.27 | 0.61 | 5.3 s |
+
+Statement slots (query/statement_pages.py): the right filing was found for 99 of 100
+test questions, but its balance sheet, income or cash flow statement often ranked
+below the top 5 because questions name a concept ("quick ratio", "capex") rather
+than the statement. Giving those pages a reserved slot raised evidence in the top 5
+from 0.46 to 0.62 on dev (0.48 to 0.61 on test) without changing hit@1 or hit@3.
+Answers: dev accuracy 0.26 to 0.38, test 0.36 to 0.39. The cost is more attempted
+answers that go wrong (hallucination 0.16 to 0.20 on dev, 0.21 to 0.27 on test):
+the 4B model now sees the statement and sometimes misreads a column or a ratio.
+Turn it off with the `C_lean_no_statements` variant or `statements: {}` in the pack.
 
 On 30 unanswerable questions (company not in the corpus) the systems refused
 29 to 30. Metadata tags are the component that matters most for retrieval.
