@@ -5,7 +5,10 @@ Query flow for the full system (variant "C_full"):
    the intent label (routing), optionally in parallel threads.
 2. Hybrid retrieval: BM25 + dense, plus an extra company-filtered search when
    the company tag is confident, merged with reciprocal rank fusion.
-3. Soft boosts from the tags, then the cross-encoder reranker.
+3. Soft boosts from the tags, then the cross-encoder reranker. When the
+   question needs a primary statement of the tagged filing (balance sheet,
+   income or cash flow statement), that page gets a reserved slot after the
+   best reranked chunks (query/statement_pages.py).
 4. Evidence gate. Not sufficient: widen once (more candidates, no boosts).
    Still not sufficient: refuse clearly.
 5. The SLM answers from the top chunks with page citations.
@@ -30,13 +33,15 @@ from core.profiling import Profiler
 from core.types import Answer, Chunk, Verdict
 from query.hybrid import fuse_chunks
 
-FULL = {"bm25": True, "dense": True, "extractor": True, "tags": True, "router": True, "reranker": True, "gate": True}
+FULL = {"bm25": True, "dense": True, "extractor": True, "tags": True, "router": True, "reranker": True, "gate": True,
+        "statements": True}
 VARIANTS: dict[str, dict[str, bool]] = {
     "C_full": FULL,
     "B_dense_rag": {key: False for key in FULL} | {"dense": True},
     **{f"C_no_{name}": FULL | {name: False} for name in FULL},
     # Phase 5 finding: on FinanceBench the router and GLiNER cost latency without retrieval gains.
     "C_lean": FULL | {"router": False, "extractor": False},
+    "C_lean_no_statements": FULL | {"router": False, "extractor": False, "statements": False},
 }
 
 
@@ -139,6 +144,28 @@ class Pipeline:
     @property
     def vocab(self) -> dict:
         return self._lazy("vocab", lambda: json.loads((self.index_dir / "vocab.json").read_text(encoding="utf-8")))
+
+    @property
+    def statement_index(self):
+        from query.statement_pages import build_statement_index
+
+        settings = self.config.get("statements", {})
+        return self._lazy("statement_index", lambda: build_statement_index(
+            self.chunks, settings.get("titles", {}), settings.get("min_numbers", 15)))
+
+    def _statement_pages(self, query: str, tags, flags: dict[str, bool], widen: bool) -> list[Chunk]:
+        """Statement pages of the tagged filing that the question needs (none
+        without a confident company and year, or when widening)."""
+        from query.statement_pages import question_kinds
+
+        settings = self.config.get("statements", {})
+        min_conf = self.config["retrieval"]["tag_min_confidence"]
+        if not flags.get("statements") or widen or not settings.get("titles"):
+            return []
+        if not (tags.company and tags.company[1] >= min_conf and tags.year and tags.year[1] >= min_conf):
+            return []
+        kinds = question_kinds(query, settings.get("question_keywords", {}))
+        return self.statement_index.lookup(tags.company[0], tags.year[0], kinds)[: settings.get("slots", 2)]
 
     @property
     def bm25(self):
@@ -324,6 +351,9 @@ class Pipeline:
         top_n = settings["fused_k"] * factor
         with profiler.stage("fuse"):
             candidates = fuse_chunks(lists, k=settings["rrf_k"], top_n=top_n) if len(lists) > 1 else lists[0][:top_n]
+            statement_pages = self._statement_pages(query, tags, flags, widen)
+            known = {c.id for c in candidates}
+            candidates = candidates + [c for c in statement_pages if c.id not in known]  # so they get reranked too
             boosts = (boost_factors(candidates, tags, settings["tag_boost"], min_conf, get(cfg, "tags.sections", {}),
                                     get(cfg, "router.chunk_types", {}))
                       if use_boosts and not widen else {c.id: 1.0 for c in candidates})
@@ -338,7 +368,12 @@ class Pipeline:
             ordered = sorted(candidates, key=lambda c: -rerank_prob[c.id] * boosts[c.id])
         else:
             ordered = sorted(candidates, key=lambda c: -(c.score or 0) * boosts[c.id])
-        final = ordered[:k]
+        if statement_pages:
+            from query.statement_pages import reserve_slots
+
+            final = reserve_slots(ordered, statement_pages, get(cfg, "statements.keep_ranked", 3), k)
+        else:
+            final = ordered[:k]
 
         result = Retrieval(chunks=final, candidates=candidates, widened=widen,
                            tags=tags.as_dict() if isinstance(tags, QueryTags) else {})

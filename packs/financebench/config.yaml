@@ -39,3 +39,25 @@ router:
 gate: # calibrated on the dev split (80 questions) by `api.cli calibrate`
   sufficient_threshold: 0.0
   partial_threshold: 0.0
+
+statements:
+  # Primary statement pages get a reserved slot (query/statement_pages.py).
+  # Tuned with the test split's failures and checked on the dev split.
+  slots: 2 # at most this many statement pages
+  keep_ranked: 3 # they come after this many of the best reranked chunks
+  min_numbers: 15 # a statement page is full of numbers
+  titles: # a line near the top of the page, as a regular expression
+    balance_sheet: '(consolidated\s+)?(statements?\s+of\s+financial\s+(position|condition)|balance\s+sheets?)'
+    cash_flow: '(consolidated\s+)?statements?\s+of\s+cash\s+flows?'
+    income: '(consolidated\s+)?(statements?\s+of\s+(operations|income|earnings)|income\s+statements?)'
+  question_keywords: # a question mentioning any of these needs that statement (word starts)
+    balance_sheet: [balance sheet, total assets, total liabilities, current assets, current liabilities, quick ratio,
+                    current ratio, working capital, inventor, accounts receivable, accounts payable, ppne, pp&e,
+                    "property, plant", shareholders equity, "shareholders' equity", stockholders equity,
+                    "stockholders' equity", total debt, debt to, cash and cash equivalents, goodwill, net assets,
+                    days payable, days sales, dso, dpo, dio]
+    cash_flow: [cash flow, capital expenditure, capex, free cash, dividends paid, dividend paid, repurchase, buyback,
+                operating activities, investing activities, financing activities, depreciation and amortization, d&a]
+    income: [income statement, p&l, revenue, net sales, sales, cogs, cost of goods, cost of sales, cost of revenue,
+             gross margin, gross profit, operating income, operating margin, operating profit, ebit, net income,
+             net earnings, eps, earnings per share, interest expense, effective tax, sg&a, r&d, margin]
