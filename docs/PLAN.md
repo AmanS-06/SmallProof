@@ -126,7 +126,7 @@ needs a calculation.
     needs a square root). The 12 left use real numbers for the wrong line
     item, segment or formula, or judge a yes/no question wrongly. Leakage
     (bench/bench_verify.py): with one copied number made wrong by 2 to 25
-    percent, 8 to 14 percent of 159 passing answers still pass, almost all
+    percent, 5 to 14 percent of 156 passing answers still pass, almost all
     because the wrong value also appears elsewhere in the passages.
     Not applied, to avoid more tuning on test: answers that correct
     themselves ("Correction:", "Wait:") look unreliable and could count as

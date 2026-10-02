@@ -26,6 +26,10 @@ def test_numbers_skip_years_citations_and_names():
     assert [(n.raw, n.value, n.scale) for n in found] == [("$1,577 million", 1577.0, 1e6)]
 
 
+def test_numbers_skip_the_day_of_a_date():
+    assert [n.raw for n in find_numbers("for the year ended December 31, 2018 it was $1,577 million")] == ["$1,577 million"]
+
+
 def test_numbers_read_accounting_negatives_and_percents():
     found = find_numbers("(1,577) and 18.36% and 0.68")
     assert [(n.value, n.percent, n.decimals) for n in found] == [(-1577.0, False, 0), (18.36, True, 2), (0.68, False, 2)]

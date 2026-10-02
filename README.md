@@ -155,8 +155,8 @@ cannot redo). The 12 wrong answers left all use real numbers for the wrong
 line item, segment or formula, or make a wrong yes/no judgement. On dev
 (automatic grading) wrong answers fell from 20% to 10% of questions.
 
-How tight is the check? In 159 saved answers that pass it, one copied number
-was made wrong by 2 to 25 percent: the check still passed 8 to 14 percent of
+How tight is the check? In 156 saved answers that pass it, one copied number
+was made wrong by 2 to 25 percent: the check still passed 5 to 14 percent of
 them (bench/bench_verify.py), almost always because the wrong value also
 appears somewhere else in the passages.
 

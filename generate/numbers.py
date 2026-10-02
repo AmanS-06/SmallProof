@@ -35,6 +35,7 @@ _CITATION = re.compile(r"\[\s*(?:(?:pages?|pp?\.?)\s*)?" + _PAGES + r"\]|\(\s*(?
                        r"|\b(?:on|from|see|in)\s+(?:pages?|p\.)\s*\d+(?:\s*(?:and|,|-)\s*\d+)*",  # "from page 68"
                        re.IGNORECASE)
 _ORDINAL = re.compile(r"(\d)(?:st|nd|rd|th)\b")
+_MONTH_BEFORE = re.compile(r"\b(?:jan|feb|mar|apr|may|jun|jul|aug|sep|sept|oct|nov|dec)[a-z]*\.?\s+$", re.IGNORECASE)
 SMALL_INT = 12  # whole numbers up to this, with no unit or currency, are skipped
 
 
@@ -85,13 +86,20 @@ def find_numbers(text: str, skip_small: bool = True) -> list[Number]:
         has_unit = bool(unit) or bool(match.group("currency"))
         if _is_year(digits) and not has_unit and "," not in digits:
             continue
+        if not has_unit and digits.isdigit() and int(digits) <= 31 and _MONTH_BEFORE.search(masked[max(0, start - 12):start]):
+            continue  # the day in "December 31, 2018"
         plain = digits.replace(",", "")
         value = float(plain)
         decimals = len(plain.split(".")[1]) if "." in plain else 0
         if skip_small and not has_unit and decimals == 0 and value <= SMALL_INT:
             continue
-        negative = bool(match.group("sign")) or bool(match.group("open") and match.group("close"))
+        in_parens = bool(match.group("open") and match.group("close"))
+        aside = in_parens and (has_unit or "$" in match.group(0))  # "($19,815 million)" is an aside, not a negative
+        negative = bool(match.group("sign")) or (in_parens and not aside)
         raw = match.group(0).strip()
+        if aside:
+            raw = raw.strip("()").strip()
+            start = start + match.group(0).index(raw)
         if match.group("open") and not match.group("close"):  # "(2,112 / ..." opens an expression, not a negative
             raw = raw.lstrip("(").strip()
             start = start + match.group(0).index(raw)
