@@ -94,6 +94,6 @@ generator:
   host: http://127.0.0.1:11434
   num_ctx: 4096
   temperature: 0.0
-  num_predict: 256
+  num_predict: 768 # was 256 until 2026-10-03: long calculations were cut off
   table_years: false # label multi-year table values with their year (generate/table_years.py)
   template: generate/prompts/answer.txt

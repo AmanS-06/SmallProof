@@ -4,8 +4,9 @@
     python -m api.cli ask      --pack financebench "What was 3M's FY2018 capex?"
     python -m api.cli split    --pack financebench
     python -m api.cli unanswerable --pack financebench
-    python -m api.cli eval     --pack financebench --variant C_full --split test --mode answer
+    python -m api.cli eval     --pack financebench --variant C_verified --split test --mode answer
     python -m api.cli report   data/runs/financebench/C_full_test_answer.jsonl
+    python -m api.cli recheck  --pack financebench --num-predict 256 data/runs/financebench/C_lean_dev_answer.jsonl
     python -m api.cli calibrate --pack financebench --run data/runs/financebench/C_no_gate_dev_answer.jsonl
 """
 
@@ -23,7 +24,7 @@ sys.path.insert(0, str(ROOT))
 
 from core.config import get, load_config, resolve_path  # noqa: E402
 from core.ollama_server import OllamaServer  # noqa: E402
-from core.pipeline import VARIANTS, Pipeline  # noqa: E402
+from core.pipeline import DEFAULT_VARIANT, VARIANTS, Pipeline  # noqa: E402
 from core.thermal import ThermalGuard  # noqa: E402
 
 SPLIT_SEED, DEV_SIZE = 42, 50
@@ -144,6 +145,32 @@ def cmd_report(args) -> None:
     print(json.dumps(summarize(load_records(args.run)), indent=1))
 
 
+def cmd_recheck(args) -> None:
+    """Run the answer verifier over saved runs (no GPU) and compare before and after."""
+    from eval.recheck import recheck_record
+    from eval.reports import answer_metrics, load_records, save_records
+
+    pipeline = Pipeline.from_pack(args.pack)
+    store = pipeline.chunk_store
+    num_predict = args.num_predict or get(pipeline.config, "generator.num_predict", None)  # old runs: 256
+    hedges = get(pipeline.config, "verify.hedges", None)
+    for path in map(Path, args.run):
+        before = load_records(path)
+        after = [recheck_record(r, store.get, num_predict, hedges) for r in before]
+        out = path.with_name(path.stem + "_verified.jsonl")
+        save_records(after, out)
+        keys = ("accuracy", "correct", "refusal_rate", "hallucination_rate", "wrong_when_answered", "by_method")
+        print(path.name, "->", out.name)
+        for name, records in (("before", before), ("after", after)):
+            metrics = answer_metrics(records)
+            print(f"  {name:6}", json.dumps({k: metrics.get(k) for k in keys}))
+        changed = [(b, a) for b, a in zip(before, after) if a.get("verification") and
+                   (a["refused"] != b["refused"] or a["prediction"] != b["prediction"])]
+        for b, a in changed:
+            outcome = lambda r: "refused" if r["refused"] else ("correct" if r["grade"]["correct"] else "wrong")
+            print(f"  {a['id']}: {outcome(b)} -> {outcome(a)}; {'; '.join(a['verification']['reasons'] or a['verification']['corrections'])}")
+
+
 def cmd_calibrate(args) -> None:
     """Pick the gate threshold t from dev runs made with the gate off (the evidence score is still recorded).
 
@@ -189,18 +216,21 @@ def main() -> None:
     p = sub.add_parser("ingest"); p.add_argument("--pack", required=True); p.add_argument("--limit", type=int)
     p.set_defaults(func=cmd_ingest)
     p = sub.add_parser("ask"); p.add_argument("question"); p.add_argument("--pack", required=True)
-    p.add_argument("--variant", default="C_full", choices=sorted(VARIANTS)); p.set_defaults(func=cmd_ask)
+    p.add_argument("--variant", default=DEFAULT_VARIANT, choices=sorted(VARIANTS)); p.set_defaults(func=cmd_ask)
     p = sub.add_parser("split"); p.add_argument("--pack", required=True); p.add_argument("--force", action="store_true")
     p.set_defaults(func=cmd_split)
     p = sub.add_parser("unanswerable"); p.add_argument("--pack", required=True); p.add_argument("--n", type=int, default=30)
     p.add_argument("--split", default="test", choices=["dev", "test"])
     p.set_defaults(func=cmd_unanswerable)
     p = sub.add_parser("eval"); p.add_argument("--pack", required=True)
-    p.add_argument("--variant", default="C_full", choices=sorted(VARIANTS) + ["A_slm_only"])
+    p.add_argument("--variant", default=DEFAULT_VARIANT, choices=sorted(VARIANTS) + ["A_slm_only"])
     p.add_argument("--split", default="dev", choices=["dev", "test", "all", "unanswerable", "unanswerable_dev"])
     p.add_argument("--mode", default="answer", choices=["answer", "retrieval"]); p.add_argument("--limit", type=int)
     p.set_defaults(func=cmd_eval)
     p = sub.add_parser("report"); p.add_argument("run"); p.set_defaults(func=cmd_report)
+    p = sub.add_parser("recheck"); p.add_argument("--pack", required=True); p.add_argument("run", nargs="+")
+    p.add_argument("--num-predict", type=int, help="the token limit the run used (runs before 2026-10-03: 256)")
+    p.set_defaults(func=cmd_recheck)
     p = sub.add_parser("calibrate"); p.add_argument("--pack", required=True); p.add_argument("--run", required=True, nargs="+")
     p.add_argument("--write", action="store_true"); p.set_defaults(func=cmd_calibrate)
     args = parser.parse_args()

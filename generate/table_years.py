@@ -64,7 +64,8 @@ def _plain(value: str) -> str:
     return value
 
 
-def _labelled_row(line: str, years: list[str]) -> str | None:
+def _row(line: str, years: list[str]) -> tuple[str, list[tuple[str, str]]] | None:
+    """A table row's label and its (year, value) pairs, or None for other lines."""
     values = _trailing_values(line)
     extra = values[: len(values) - len(years)]
     # Extra values before the columns are fine only if they are years in the
@@ -77,22 +78,39 @@ def _labelled_row(line: str, years: list[str]) -> str | None:
         label = label[: label.rstrip().rfind(value)].rstrip().rstrip("$").rstrip()
     if not re.search(r"[A-Za-z]", label):
         return None
-    pairs = "; ".join(f"{year}: {_plain(value)}" for year, value in zip(years, values))
-    return f"{label} ({pairs})"
+    return label, list(zip(years, values))
+
+
+def _table_rows(text: str) -> list[tuple[str, list[tuple[str, str]]]]:
+    """Rows of a multi-year table in the text, or [] when it does not look like one."""
+    lines = text.splitlines()
+    years, first_row = _header_years(lines)
+    if len(years) < 2 or len(years) > 5:
+        return []
+    rows = [(index, row) for index in range(first_row, len(lines)) if (row := _row(lines[index], years))]
+    return rows if len(rows) >= MIN_ROWS else []
 
 
 def annotate_table_years(text: str) -> str:
     """The text with year labels on the values of a multi-year table, or the
     text unchanged when it does not look like one."""
-    lines = text.splitlines()
-    years, first_row = _header_years(lines)
-    if len(years) < 2 or len(years) > 5:
+    rows = _table_rows(text)
+    if not rows:
         return text
-    rewritten = list(lines)
-    changed = 0
-    for index in range(first_row, len(lines)):
-        labelled = _labelled_row(lines[index], years)
-        if labelled is not None:
-            rewritten[index] = labelled
-            changed += 1
-    return "\n".join(rewritten) if changed >= MIN_ROWS else text
+    rewritten = text.splitlines()
+    for index, (label, pairs) in rows:
+        rewritten[index] = f"{label} (" + "; ".join(f"{year}: {_plain(value)}" for year, value in pairs) + ")"
+    return "\n".join(rewritten)
+
+
+def table_value_years(text: str) -> list[tuple[float, str]]:
+    """(value, year of its column) for every value of a multi-year table in
+    the text. Used to check that an answer took a value from the year it
+    names (generate/verify.py)."""
+    found = []
+    for _, (_, pairs) in _table_rows(text):
+        for year, value in pairs:
+            digits = re.sub(r"[^\d.]", "", value)
+            if digits and digits != ".":
+                found.append((float(digits), year))
+    return found

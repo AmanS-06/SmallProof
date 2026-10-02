@@ -12,6 +12,9 @@ Query flow for the full system (variant "C_full"):
 4. Evidence gate. Not sufficient: widen once (more candidates, no boosts).
    Still not sufficient: refuse clearly.
 5. The SLM answers from the top chunks with page citations.
+6. Answer check (generate/verify.py): code redoes the SLM's calculations and
+   corrects slips, and every number must come from the passages, the
+   question or a checked calculation. An answer that fails is refused.
 
 Each component can be switched off through a variant, which is how the
 baselines and ablations are run. Models load lazily on first use.
@@ -34,15 +37,19 @@ from core.types import Answer, Chunk, Verdict
 from query.hybrid import fuse_chunks
 
 FULL = {"bm25": True, "dense": True, "extractor": True, "tags": True, "router": True, "reranker": True, "gate": True,
-        "statements": True}
+        "statements": True, "verify": True}
 VARIANTS: dict[str, dict[str, bool]] = {
     "C_full": FULL,
     "B_dense_rag": {key: False for key in FULL} | {"dense": True},
     **{f"C_no_{name}": FULL | {name: False} for name in FULL},
     # Phase 5 finding: on FinanceBench the router and GLiNER cost latency without retrieval gains.
-    "C_lean": FULL | {"router": False, "extractor": False},
-    "C_lean_no_statements": FULL | {"router": False, "extractor": False, "statements": False},
+    # C_lean and C_lean_no_statements are the 2026-09-30 runs, before the answer check existed.
+    "C_lean": FULL | {"router": False, "extractor": False, "verify": False},
+    "C_lean_no_statements": FULL | {"router": False, "extractor": False, "statements": False, "verify": False},
+    # 2026-10-03: C_lean plus the answer check. The default.
+    "C_verified": FULL | {"router": False, "extractor": False},
 }
+DEFAULT_VARIANT = "C_verified"
 
 
 @dataclass
@@ -397,11 +404,16 @@ class Pipeline:
             result = self.retrieve(query, flags, profiler, tags=tags, widen=True)
         return result
 
-    def ask(self, query: str, variant: str | dict = "C_full") -> Answer:
+    def ask(self, query: str, variant: str | dict = "C_full", on_stage: Callable[[str, dict], None] | None = None) -> Answer:
+        """Answer a question. on_stage(name, data), if given, is called as each
+        stage finishes (the demo uses it to show progress)."""
+        flags = VARIANTS[variant] if isinstance(variant, str) else variant
         profiler = Profiler()
-        result = self.retrieve_with_fallback(query, variant, profiler)
+        result = self.retrieve_with_fallback(query, flags, profiler)
         details = {"tags": result.tags, "widened": result.widened,
                    "chunks": [{"id": c.id, "doc_id": c.doc_id, "page": c.page_start} for c in result.chunks]}
+        if on_stage:
+            on_stage("retrieved", {"retrieval": result, "timings_ms": dict(profiler.timings_ms)})
         if result.verdict is not None and result.verdict != Verdict.SUFFICIENT:
             refusal = (Path(self.config["root"]) / "generate" / "prompts" / "refusal.txt").read_text(encoding="utf-8").strip()
             return Answer(text=refusal, refused=True, verdict=result.verdict, confidence=result.confidence,
@@ -410,6 +422,33 @@ class Pipeline:
         answer.verdict, answer.confidence = result.verdict, result.confidence
         answer.timings_ms = {**profiler.timings_ms, **answer.timings_ms}
         answer.details = {**details, **answer.details}
+        if on_stage:
+            on_stage("generated", {"text": answer.text, "refused": answer.refused})
+        if flags.get("verify") and not answer.refused:
+            start = time.perf_counter()
+            answer = self.check_answer(query, result.chunks, answer)
+            answer.timings_ms["verify"] = round((time.perf_counter() - start) * 1000, 1)
+        return answer
+
+    def check_answer(self, query: str, chunks: Sequence[Chunk], answer: Answer) -> Answer:
+        """Run the answer check (generate/verify.py). A failed answer becomes a
+        refusal; a corrected one gets the corrected text. The SLM's own text is
+        kept in details["unverified_answer"]."""
+        from generate.citations import check_citations
+        from generate.verify import verify_answer
+
+        num_predict = get(self.config, "generator.num_predict", None)
+        output_tokens = answer.details.get("slm", {}).get("slm_output_tokens")
+        truncated = bool(num_predict and output_tokens and output_tokens >= num_predict)
+        check = verify_answer(answer.text, chunks, query, truncated, get(self.config, "verify.hedges", None))
+        answer.details["verification"] = check.as_dict()
+        if not check.ok:
+            answer.details["unverified_answer"] = answer.text
+            refusal = (Path(self.config["root"]) / "generate" / "prompts" / "unverified.txt").read_text(encoding="utf-8")
+            answer.text, answer.refused, answer.citations = refusal.strip(), True, []
+        elif check.text != answer.text:
+            answer.details["unverified_answer"] = answer.text
+            answer.text, answer.citations = check.text, check_citations(check.text, chunks).citations
         return answer
 
     def ask_slm_only(self, query: str, doc_id: str, max_tokens: int = 3000) -> Answer:
