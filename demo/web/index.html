@@ -79,7 +79,9 @@
         <div>
           <h2>FinanceBench open sample, test split (100 questions)</h2>
           <p class="muted">84 SEC filings, 31,999 chunks, one shared index. Qwen3 4B Instruct (Q4) writes the answers; everything runs on one
-            laptop. Precision = share of given answers that are right. Numbers come from saved runs on this machine.</p>
+            laptop. Precision = share of given answers that are right. Automatic grading compares numbers (within 2%) and uses the
+            same 4B model as a judge for prose, which proved too lenient; reviewed runs were graded by reading every answer
+            against the gold answer. Numbers come from saved runs on this machine.</p>
         </div>
       </div>
       <div id="compare" class="compare"></div>
@@ -128,9 +130,9 @@
         <div class="how-grid">
           <div class="panel">
             <h3>Why verify in code</h3>
-            <p>On the test split the 4B model gave 27 wrong answers out of 100 before the check. Most were arithmetic slips, values
-              from the wrong year column, or answers that ended in "NOT FOUND". A model cannot be trusted to grade itself; code can redo
-              arithmetic exactly.</p>
+            <p>Before the check, the 4B model answered 23 of 100 test questions wrongly (each answer reviewed by hand). Many were
+              arithmetic slips, numbers with no source, values from the wrong year column, or answers that hedged and ended in
+              "NOT FOUND". The model also passed such answers when asked to grade itself. Code can redo arithmetic exactly.</p>
           </div>
           <div class="panel">
             <h3>What the colours mean</h3>

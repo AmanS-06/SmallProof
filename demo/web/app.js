@@ -205,12 +205,11 @@ function renderEvidence() {
   $("#evidence").className = "evidence";
   $("#evidence").innerHTML = state.chunks
     .map((c, i) => {
-      const score = c.score ?? 0;
       const used = quotedPages.has(String(c.page));
       return `<button class="ev" data-i="${i}">
-        <div class="ev-head"><b>${i + 1}. ${escapeHtml(c.company || c.doc_id)} ${escapeHtml(c.year || "")}, page ${c.page}</b><span class="muted">${score.toFixed(2)}</span></div>
+        <div class="ev-head"><b>${i + 1}. ${escapeHtml(c.company || c.doc_id)} ${escapeHtml(c.year || "")}, page ${c.page}</b><span class="muted" title="reranker probability">${c.score != null ? c.score.toFixed(2) : ""}</span></div>
         <div class="ev-meta"><span class="pill">${escapeHtml(c.type || "text")}</span>${c.section ? `<span class="pill">${escapeHtml(c.section)}</span>` : ""}${c.statement_slot ? '<span class="pill slot">statement slot</span>' : ""}${used ? '<span class="pill gold">numbers used</span>' : ""}</div>
-        <div class="bar"><i style="width:${Math.max(3, score * 100)}%"></i></div>
+        ${c.score != null ? `<div class="bar"><i style="width:${Math.max(3, c.score * 100)}%"></i></div>` : ""}
         <div class="ev-snippet">${escapeHtml(c.text.slice(0, 220))}</div>
       </button>`;
     })
@@ -321,7 +320,7 @@ async function loadRuns() {
     return;
   }
   const featured = state.runs.filter((r) => r.featured);
-  const bestPrecision = Math.max(...featured.map((r) => r.precision ?? 0));
+  const bestPrecision = Math.max(...featured.filter((r) => r.grading === "reviewed").map((r) => r.precision ?? 0));
   $("#compare").innerHTML =
     `<div class="cmp-row head"><span>System</span><span class="stack-cell">Outcome of 100 questions</span><span class="cmp-num">Accuracy</span><span class="cmp-num">Precision</span><span class="cmp-num hide-small">Refused</span><span class="cmp-num hide-narrow">Wrong</span></div>` +
     featured
@@ -330,7 +329,7 @@ async function loadRuns() {
         const correct = r.accuracy;
         const refused = 1 - correct - wrong;
         return `<div class="cmp-row ${r.precision === bestPrecision ? "best" : ""}">
-          <div class="cmp-name">${escapeHtml(r.label)}<small>${escapeHtml(r.name)}</small></div>
+          <div class="cmp-name">${escapeHtml(r.label)}<small><span class="pill ${r.grading === "reviewed" ? "gold" : ""}">${r.grading} grading</span> ${escapeHtml(r.name)}</small></div>
           <div class="stack-cell"><div class="stack" title="correct ${pct(correct)}, wrong ${pct(wrong)}, refused ${pct(refused)}"><i class="correct" style="width:${correct * 100}%"></i><i class="wrong" style="width:${wrong * 100}%"></i><i class="refused" style="width:${refused * 100}%"></i></div></div>
           <div class="cmp-num">${pct(correct)}<small>${pct(r.ci95[0])} to ${pct(r.ci95[1])}</small></div>
           <div class="cmp-num"><b>${pct(r.precision)}</b><small>when answered</small></div>
@@ -341,7 +340,7 @@ async function loadRuns() {
       .join("");
   const select = $("#run-select");
   select.innerHTML = state.runs.map((r) => `<option value="${escapeHtml(r.name)}">${escapeHtml(r.label)} (${r.n})</option>`).join("");
-  const preferred = ["C_verified_test_answer", "C_lean_test_answer_verified"].find((name) => state.runs.some((r) => r.name === name));
+  const preferred = ["C_verified_test_answer_verified_reviewed", "C_lean_test_answer_reviewed"].find((name) => state.runs.some((r) => r.name === name));
   if (preferred) select.value = preferred;
   loadRecords();
 }
@@ -377,8 +376,28 @@ function showRecord(id) {
   }
   $("#run-detail").innerHTML = `<div class="answer-head"><span class="badge ${outcomeBadge}">${r.outcome}</span><span class="muted small">${escapeHtml(r.group || "")} | graded by ${escapeHtml(r.method || "n/a")} | evidence in top 5: ${r.evidence_in_top5 ? "yes" : "no"}</span></div>
     <dl class="kv"><dt>Question</dt><dd>${escapeHtml(r.question)}</dd><dt>Gold</dt><dd>${escapeHtml(r.gold)}</dd><dt>Answer</dt><dd>${answer}</dd>${checkHtml}
+    ${r.why ? `<dt>Review</dt><dd>${escapeHtml(r.why)}</dd>` : ""}
     <dt>Gold pages</dt><dd>${r.evidence.map((e) => `${escapeHtml(e[0])} p. ${e[1]}`).join(", ") || "none"}</dd>
-    <dt>Given pages</dt><dd>${r.chunks.map((c) => `${escapeHtml(c.doc_id || "")} p. ${c.page ?? "?"}`).join(", ")}</dd></dl>`;
+    <dt>Given pages</dt><dd>${r.chunks.map((c) => `${escapeHtml(c.doc_id || "")} p. ${c.page ?? "?"}`).join(", ")}</dd></dl>
+    <button class="primary replay" id="replay">Replay in the Ask view</button>`;
+  $("#replay").addEventListener("click", () => replay(r));
+}
+
+async function replay(r) {
+  // Show a saved answer in the Ask view, with its evidence, without running any model.
+  $('.tab[data-tab="ask"]').click();
+  $("#question").value = r.question;
+  resetStages();
+  state.chunks = await Promise.all(r.chunks.map((c) => api(`/api/chunk/${encodeURIComponent(c.id)}`).catch(() => null)));
+  state.chunks = state.chunks.filter(Boolean);
+  $("#tags").innerHTML = '<span class="muted">Replayed from a saved run: tags were not stored.</span>';
+  $("#evidence-meta").textContent = "(saved run)";
+  ["understand", "search", "rerank", "write"].forEach((s) => setStage(s, "done"));
+  const check = r.verification;
+  if (check) setStage("verify", check.ok ? "done" : "fail");
+  renderAnswer({ text: r.prediction, refused: r.outcome === "refused", verification: check, unverified_answer: r.unverified }, null);
+  $(".timing").textContent = `replayed | graded ${r.outcome}${r.why ? ": " + r.why : ""}`;
+  window.scrollTo({ top: 0, behavior: "smooth" });
 }
 
 $("#run-select").addEventListener("change", loadRecords);

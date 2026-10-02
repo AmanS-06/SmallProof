@@ -98,13 +98,45 @@ needs a calculation.
     0.36, hallucination 0.20 to 0.26. The SLM answered more often but not
     better. Kept in the code, off by default.
 
+13. 2026-10-03: answer check (generate/verify.py, variant C_verified, now the
+    default). Diagnosis first: on the saved C_lean test run, 27 of 100
+    answers were confidently wrong and nothing checked the SLM's output.
+    Of those, arithmetic slips, numbers with no source in the passages,
+    values from the wrong year column, hedged answers ending in NOT FOUND,
+    and answers cut off at 256 tokens made up most of the cases code can
+    detect. The check redoes written calculations (and corrects the result),
+    requires every number to come from the passages, the question or a
+    checked calculation, compares table values with the year column the
+    sentence names, and refuses hedged or cut-off answers. It knows numbers,
+    years and arithmetic, nothing about finance. Built and tuned on dev only
+    (six saved dev runs, rechecked offline with `api.cli recheck`). Then
+    applied once to test; three parser gaps seen in test refusals were fixed
+    afterwards (page numbers written in prose, ordinals like "61st", a sum
+    of two equal values) and are disclosed here. Cost: about 3 ms per answer.
+    Dev (automatic grading, fresh GPU run): accuracy 0.38 to 0.36,
+    hallucination 0.20 to 0.10, precision when answered 0.66 to 0.78.
+14. num_predict 256 to 768: long calculations were cut off mid-answer (3 of
+    50 dev answers). With temperature 0 this only changes answers that hit
+    the limit.
+15. Grading reviewed by reading. The 4B self-judge passed answers that
+    contradict themselves (dev 00517, 00807), and the numeric grader uses the
+    gold answer's first number, which misgrades prose gold answers in both
+    directions. eval/review.py stores one verdict per answered question with
+    a reason (an LLM reviewer read each question, gold answer and answer; numbers
+    within 1 percent of gold count as right, lists must be complete,
+    contradictory, hedged or cut-off answers are wrong). A verdict is tied
+    to a hash of the answer text. The reported test numbers use it.
+
 ### Still open for Aman
 
 - Package name (then move to src/<name>/ and add pyproject.toml).
 - Intent labels and hand-labelled ground truth: the router's labels in
   packs/financebench/config.yaml are provisional (LLM-drafted), so router
   accuracy and its confusion matrix are not measured yet.
-- Whether C_lean becomes the default.
+- A clean held-out set: the test split has now informed two changes
+  (statement-slot keywords, three verifier parser gaps). Any public claim is
+  stronger with questions that never influenced a design decision.
+- Spot-check of the review verdicts (LLM-graded; a second reader helps).
 - Licenses before any commercial use: ModernBERT zero-shot training data mix,
   MS MARCO terms for the reranker.
 - Second domain pack (Phase 6).

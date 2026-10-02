@@ -4,8 +4,9 @@ A local-first Python library for question answering over documents. Small CPU
 models do the heavy lifting: a zero-shot classifier (the Jev-style decision
 layer), an entity extractor, hybrid retrieval and a reranker. A small language
 model (SLM) on the GPU only writes the final answer from 3 to 5 chunks, with
-page citations. No paid APIs; everything runs on one laptop (RTX 4060 Laptop,
-8 GB VRAM).
+page citations. Then code checks the answer: it redoes the SLM's arithmetic,
+traces every number to a passage, and refuses what it cannot verify. No paid
+APIs; everything runs on one laptop (RTX 4060 Laptop, 8 GB VRAM).
 
 Status: Phases 0 to 5 implemented and measured on FinanceBench; Phase 6
 (packaging) partly done. See [docs/PLAN.md](docs/PLAN.md) for the plan and
@@ -29,7 +30,16 @@ Query (per question)
      of the tagged filing, that page gets one of the last two slots of the top 5
   4. Evidence gate (score threshold calibrated on dev): widen once, then refuse
   5. The SLM (Qwen3 4B Instruct, Ollama, GPU) answers from the top 5 chunks, citing pages
+  6. Answer check (generate/verify.py, about 3 ms): code redoes every written calculation
+     and corrects a wrong result; every number must be in the passages, in the question,
+     or the result of a checked step; a value from a multi-year table must sit in the
+     column of the year its sentence names; hedged or cut-off answers are refused
 ```
+
+The answer check is what makes a small model usable here. It knows numbers,
+years and arithmetic, nothing about finance, so it applies to any domain pack.
+It cannot catch a correct number used for the wrong line item, or a wrong
+yes/no judgement in prose.
 
 Every stage sits behind an interface in `core/interfaces.py` and can be
 switched off or swapped through the config; `core/pipeline.py` defines the
@@ -69,10 +79,29 @@ go to `models/hf`). Ollama: extract the standalone Windows zip to
 .\.venv\Scripts\python.exe packs\financebench\prepare.py --download --check   # data
 .\.venv\Scripts\python.exe -m api.cli ingest --pack financebench
 .\.venv\Scripts\python.exe -m api.cli ask --pack financebench "What is the FY2018 capital expenditure amount (in USD millions) for 3M?"
-.\.venv\Scripts\python.exe -m api.cli eval --pack financebench --variant C_full --split test --mode answer
-.\.venv\Scripts\python.exe -m uvicorn api.server:app --port 8000               # HTTP API
-.\.venv\Scripts\streamlit.exe run demo/app.py                                   # demo
+.\.venv\Scripts\python.exe -m api.cli eval --pack financebench --variant C_verified --split test --mode answer
+.\.venv\Scripts\python.exe -m api.cli recheck --pack financebench data\runs\financebench\C_lean_test_answer.jsonl --num-predict 256
+.\.venv\Scripts\python.exe -m uvicorn api.server:app --port 8000               # demo and HTTP API
 ```
+
+`recheck` applies the current answer check to a saved run without the GPU.
+
+## Demo
+
+Start the server above and open http://127.0.0.1:8000. Plain HTML, CSS and
+JavaScript served by FastAPI (no build step, no CDN, works offline).
+- Ask: watch each stage finish (server-sent events), see the query tags, the
+  five passages with reranker scores, and the answer with every number
+  coloured by how code verified it (copied from a passage, recalculated,
+  corrected, or without a source). Citations open the cited passage with the
+  copied numbers highlighted. Refused answers show what the SLM wrote and why
+  it was not given.
+- Evaluation: compare the saved runs and browse every test question with its
+  gold answer, outcome, review note and check; replay any of them in the Ask
+  view without the GPU.
+- How it works: the pipeline and the limits of the check.
+
+The evaluation data is read from `data/` on your machine and never shipped.
 
 ## Laptop safety (heat)
 

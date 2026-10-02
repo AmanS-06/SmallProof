@@ -49,14 +49,14 @@ busy = threading.Lock()
 app = FastAPI(title="Local SLM + Jev-style RAG")
 
 # Saved runs shown in the demo's comparison table, in order, with a readable name.
+# "reviewed" runs are graded by reading each answer (eval/review.py); the others by the automatic grader.
 RUN_LABELS = {
     "A_slm_only_test_answer": "A: SLM only",
     "B_dense_rag_test_answer": "B: dense RAG",
     "C_full_test_answer": "C: full system",
-    "C_lean_test_answer_before_statements": "C_lean",
-    "C_lean_test_answer": "C_lean + statement slots",
-    "C_lean_test_answer_verified": "C_lean + answer check (rechecked offline)",
-    "C_verified_test_answer": "C_verified (default, rerun)",
+    "C_lean_test_answer": "C_lean: before the answer check",
+    "C_lean_test_answer_reviewed": "C_lean: before the answer check",
+    "C_verified_test_answer_verified_reviewed": "C_verified: with the answer check",
 }
 
 
@@ -207,7 +207,8 @@ def runs() -> list[dict]:
                       "n": len(records), "accuracy": answers["accuracy"], "ci95": answers["accuracy_ci95"],
                       "refusal_rate": answers["refusal_rate"], "hallucination_rate": answers["hallucination_rate"],
                       "precision": round(1 - answers["wrong_when_answered"], 3) if answers["wrong_when_answered"] is not None else None,
-                      "hit5": hit5, "by_method": answers["by_method"]})
+                      "hit5": hit5, "by_method": answers["by_method"],
+                      "grading": "reviewed" if "review" in answers["by_method"] else "automatic"})
     return sorted(found, key=lambda r: (r["order"], r["name"]))
 
 
@@ -226,6 +227,7 @@ def run(name: str) -> list[dict]:
                     "prediction": r.get("prediction"), "unverified": r.get("unverified_prediction") or
                     (r.get("details") or {}).get("unverified_answer"),
                     "outcome": _outcome(r), "method": (r.get("grade") or {}).get("method"),
+                    "why": (r.get("grade") or {}).get("why"),
                     "evidence_in_top5": any((c.get("doc_id"), c.get("page")) in gold_pages for c in r.get("chunks", [])),
                     "evidence": sorted(gold_pages), "chunks": r.get("chunks", []), "verification": verification})
     return out

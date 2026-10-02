@@ -65,7 +65,7 @@ def apply(run: Path, verdicts: dict | None = None) -> Path:
             continue
         review = reviews.get(r["id"])
         if review and review["hash"] == text_hash(r["prediction"]):
-            r["grade"] = {"correct": review["correct"], "method": "review", "auto": r.get("grade")}
+            r["grade"] = {"correct": review["correct"], "method": "review", "why": review["why"], "auto": r.get("grade")}
         else:
             missing.append(r["id"])
     out = run.with_name(run.stem + "_reviewed.jsonl")

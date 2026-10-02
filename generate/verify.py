@@ -216,10 +216,9 @@ def _derivations(values: list[float]):
     for a in values:
         yield a, f"{a:g} rounded"
         yield 2 * a, f"{a:g} + {a:g}"
-    for a, b in itertools.permutations(values, 2):
+    for a, b in itertools.permutations(values, 2):  # no products: written ones are checked as calculations
         yield a + b, f"{a:g} + {b:g}"
         yield a - b, f"{a:g} - {b:g}"
-        yield a * b, f"{a:g} x {b:g}"
         if b:
             yield a / b, f"{a:g} / {b:g}"
             yield (a - b) / b, f"({a:g} - {b:g}) / {b:g}"
@@ -234,8 +233,8 @@ def _derived_from(written: Number, known: list[float]) -> str | None:
     scaled = written.scale != 1.0 or written.currency
     for result, description in _derivations(distinct):
         candidates = [result, result * 100] + ([result * 1e3, result / 1e3] if scaled else [])
-        if any(abs(written.magnitude - abs(c)) <= max(0.5 * 10 ** -written.decimals, 0.001 * written.magnitude)
-               for c in candidates):
+        # Rounding only, no slack: an unwritten step must land on the written digits.
+        if any(abs(written.magnitude - abs(c)) <= 0.5 * 10 ** -written.decimals * (1 + 1e-9) for c in candidates):
             return description
     return None
 

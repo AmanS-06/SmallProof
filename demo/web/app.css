@@ -242,6 +242,7 @@ mark.n[data-note]:hover::after {
 .kv { display: grid; grid-template-columns: 110px minmax(0, 1fr); gap: 6px 12px; font-size: 14px; }
 .kv dt { color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spacing: 0.04em; padding-top: 2px; }
 .kv dd { margin: 0; white-space: pre-wrap; overflow-wrap: anywhere; }
+.replay { margin-top: 16px; }
 
 /* How it works */
 .how { max-width: 1100px; }
@@ -264,7 +265,7 @@ mark.n[data-note]:hover::after {
   .brand-sub, .stages small { display: none; }
   .stages em { position: static; display: block; }
   .stages li { flex-wrap: wrap; }
-  .ask-grid, .explorer { grid-template-columns: 1fr; }
+  .ask-grid, .explorer { grid-template-columns: minmax(0, 1fr); }
   .explorer-detail { position: static; }
   .flow, .how-grid { grid-template-columns: 1fr 1fr; }
   .cmp-row { grid-template-columns: 1fr repeat(3, 70px); }
@@ -278,7 +279,10 @@ mark.n[data-note]:hover::after {
   .stages { grid-template-columns: 1fr 1fr; }
   .flow, .how-grid { grid-template-columns: 1fr; }
   .question-actions { flex-direction: column; align-items: stretch; }
-  .controls { justify-content: space-between; }
+  .controls { justify-content: space-between; min-width: 0; }
+  .controls select { flex: 1; min-width: 0; }
+  .stages { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+  .example .grp { width: 48px; }
   .cmp-row { grid-template-columns: 1fr 64px 64px; }
   .cmp-row .hide-small { display: none; }
 }
