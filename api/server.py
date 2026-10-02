@@ -65,6 +65,12 @@ class AskRequest(BaseModel):
     variant: str = DEFAULT_VARIANT
 
 
+class VerifyRequest(BaseModel):
+    answer: str
+    passage: str
+    question: str = ""
+
+
 def _check_variant(variant: str) -> None:
     if variant not in VARIANTS:
         raise HTTPException(400, f"Unknown variant. Choose one of {sorted(VARIANTS)}")
@@ -174,6 +180,16 @@ def ask_stream(question: str, variant: str = DEFAULT_VARIANT) -> StreamingRespon
         raise HTTPException(400, "Empty question")
     return StreamingResponse(_events(question.strip()[:1000], variant), media_type="text/event-stream",
                              headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"})
+
+
+@app.post("/api/verify")
+def verify(request: VerifyRequest) -> dict:
+    """The answer check on its own, for the demo's "Try the check" panel. No model runs."""
+    from core.types import Chunk
+    from generate.verify import verify_answer
+
+    passage = Chunk(id="demo:p1:c0", doc_id="demo", text=request.passage[:20000], page_start=1, page_end=1)
+    return verify_answer(request.answer[:5000], [passage], request.question[:1000]).as_dict()
 
 
 @app.get("/api/chunk/{chunk_id}")

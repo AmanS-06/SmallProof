@@ -127,6 +127,28 @@
             in the passages, in the question, or the result of a checked step. A value must come from the column of the year
             the sentence names. Hedged or cut-off answers are refused.</p></div>
         </div>
+        <div class="panel try">
+          <h3>Try the check <span class="muted small">no model runs; edit either box (made-up company)</span></h3>
+          <div class="try-grid">
+            <div>
+              <label class="label" for="try-passage">Passage (page 1)</label>
+              <textarea id="try-passage" rows="9" spellcheck="false">Example Corp Consolidated Balance Sheets
+December 31, 2023 December 31, 2022
+(In millions)
+Total current assets 4,862.5 4,310.2
+Total current liabilities 3,240.8 3,512.6
+Total assets 18,904.1 17,655.0
+Total liabilities 11,377.9 10,915.3</textarea>
+            </div>
+            <div>
+              <label class="label" for="try-answer">Answer to check</label>
+              <textarea id="try-answer" rows="9">Example Corp's 2023 current ratio is 1.62. Total current assets were $4,862.5 million and total current liabilities were $3,240.8 million [p. 1], so 4,862.5 / 3,240.8 = 1.62. Working capital rose to $1,621.7 million.</textarea>
+            </div>
+          </div>
+          <div class="try-result" id="try-result"></div>
+          <p class="muted small">The answer above has an arithmetic slip, written the way a small model does. Then try: write "In 2022," before
+            "total current assets" (wrong column), change $4,862.5 to a number that is not in the passage, or add "NOT FOUND".</p>
+        </div>
         <div class="how-grid">
           <div class="panel">
             <h3>Why verify in code</h3>

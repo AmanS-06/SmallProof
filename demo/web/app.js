@@ -410,4 +410,33 @@ $$("#filters .chip").forEach((chip) =>
   })
 );
 
+// Section: "Try the check" (no model runs)
+
+let tryTimer = null;
+async function runTry() {
+  const response = await fetch("/api/verify", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ answer: $("#try-answer").value, passage: $("#try-passage").value }),
+  });
+  if (!response.ok) return;
+  const check = await response.json();
+  let badge = '<span class="badge ok">Verified</span>';
+  if (check.ok && check.corrections.length) badge = '<span class="badge fixed">Verified after a correction</span>';
+  else if (!check.ok) badge = '<span class="badge refused">Refused</span>';
+  const notes = [
+    ...check.corrections.map((c) => `<li class="fix">${escapeHtml(c)}</li>`),
+    ...check.reasons.map((r) => `<li class="bad">${escapeHtml(r)}</li>`),
+  ].join("");
+  $("#try-result").innerHTML = `<div class="answer-head">${badge}<span class="muted small">hover a number for its source</span></div>
+    <div class="answer-text">${highlight(check.text, check.numbers)}</div>${notes ? `<ul class="try-notes">${notes}</ul>` : ""}`;
+}
+for (const id of ["#try-answer", "#try-passage"]) {
+  $(id).addEventListener("input", () => {
+    clearTimeout(tryTimer);
+    tryTimer = setTimeout(runTry, 250);
+  });
+}
+runTry();
+
 init();

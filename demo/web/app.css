@@ -255,6 +255,14 @@ mark.n[data-note]:hover::after {
 .step.accent span { background: var(--ok-soft); color: var(--ok); }
 .how-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
 .how-grid p { font-size: 14px; color: var(--muted); }
+.try { margin-bottom: 16px; }
+.try-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 12px; }
+.try-grid textarea { font-size: 13px; }
+#try-passage { font-family: var(--mono); }
+.try-result { margin: 12px 0 8px; padding: 12px; border-radius: 8px; background: var(--surface-2); min-height: 60px; }
+.try-notes { margin: 8px 0 0; padding-left: 18px; font-size: 13px; }
+.try-notes .fix { color: var(--warn); }
+.try-notes .bad { color: var(--bad); }
 .legend-list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 8px; font-size: 14px; color: var(--muted); }
 
 /* Narrow screens */
@@ -277,7 +285,7 @@ mark.n[data-note]:hover::after {
   .corpus { display: none; }
   main { padding: 16px; }
   .stages { grid-template-columns: 1fr 1fr; }
-  .flow, .how-grid { grid-template-columns: 1fr; }
+  .flow, .how-grid, .try-grid { grid-template-columns: minmax(0, 1fr); }
   .question-actions { flex-direction: column; align-items: stretch; }
   .controls { justify-content: space-between; min-width: 0; }
   .controls select { flex: 1; min-width: 0; }
