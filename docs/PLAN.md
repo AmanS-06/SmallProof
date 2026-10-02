@@ -2,6 +2,11 @@
 
 Version 1, 2026-09-27. Status: scaffold created, Phase 0 not started.
 
+2026-10-03: the answer check (decision 13) and an interactive web demo
+(demo/web, served by api/server.py) added. Headline, test split, reviewed
+grading: precision when answered 0.65 to 0.78 at the same 43 correct; wrong
+answers 23 to 12 of 100.
+
 2026-09-28: standard-library-only modules implemented ahead of Phase 0 (nothing
 installed): core/types.py, core/interfaces.py, core/registry.py,
 core/profiling.py, query/hybrid.py (RRF), generate/citations.py,
@@ -115,6 +120,17 @@ needs a calculation.
     of two equal values) and are disclosed here. Cost: about 3 ms per answer.
     Dev (automatic grading, fresh GPU run): accuracy 0.38 to 0.36,
     hallucination 0.20 to 0.10, precision when answered 0.66 to 0.78.
+    Test (fresh GPU run, reviewed grading, see 15): correct 43 to 43, wrong
+    23 to 12, refused 34 to 45, precision when answered 0.65 to 0.78. The
+    check refused 10 wrong answers, corrected 1, refused 1 right one (a CAGR
+    needs a square root). The 12 left use real numbers for the wrong line
+    item, segment or formula, or judge a yes/no question wrongly. Leakage
+    (bench/bench_verify.py): with one copied number made wrong by 2 to 25
+    percent, 8 to 14 percent of 159 passing answers still pass, almost all
+    because the wrong value also appears elsewhere in the passages.
+    Not applied, to avoid more tuning on test: answers that correct
+    themselves ("Correction:", "Wait:") look unreliable and could count as
+    hedges; to be checked on a held-out set.
 14. num_predict 256 to 768: long calculations were cut off mid-answer (3 of
     50 dev answers). With temperature 0 this only changes answers that hit
     the limit.

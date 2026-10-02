@@ -8,9 +8,9 @@ page citations. Then code checks the answer: it redoes the SLM's arithmetic,
 traces every number to a passage, and refuses what it cannot verify. No paid
 APIs; everything runs on one laptop (RTX 4060 Laptop, 8 GB VRAM).
 
-Status: Phases 0 to 5 implemented and measured on FinanceBench; Phase 6
-(packaging) partly done. See [docs/PLAN.md](docs/PLAN.md) for the plan and
-decision log.
+Status: Phases 0 to 5 implemented and measured on FinanceBench, plus the
+answer check and an interactive demo; Phase 6 (packaging) partly done. See
+[docs/PLAN.md](docs/PLAN.md) for the plan and decision log.
 
 ## How it works
 
@@ -136,13 +136,50 @@ first four rows ran before the 4-thread cap was introduced.
 
 84 filings in one shared index. Details, ablations and decisions: docs/PLAN.md.
 
+### With the answer check (2026-10-03, reviewed grading)
+
+Every answered question was graded by reading it against the gold answer
+(eval/review.py; numbers within 1% count as right, lists must be complete,
+hedged or contradictory answers are wrong). The automatic grader was not
+good enough for this: the 4B self-judge passed answers that contradict
+themselves.
+
+| System | Correct (95% CI) | Wrong | Refused | Precision when answered |
+|---|---|---|---|---|
+| C_lean + statement slots, before the check | 43 (34 to 53) | 23 | 34 | 65% |
+| C_verified: the same plus the answer check (default) | 43 (34 to 53) | 12 | 45 | 78% |
+
+The check refused 10 wrong answers, corrected 1 (5,121.3 / 7,491.5 is 0.68,
+not 5.12) and refused 1 right one (a CAGR needs a square root, which the check
+cannot redo). The 12 wrong answers left all use real numbers for the wrong
+line item, segment or formula, or make a wrong yes/no judgement. On dev
+(automatic grading) wrong answers fell from 20% to 10% of questions.
+
+How tight is the check? In 159 saved answers that pass it, one copied number
+was made wrong by 2 to 25 percent: the check still passed 8 to 14 percent of
+them (bench/bench_verify.py), almost always because the wrong value also
+appears somewhere else in the passages.
+
+Caveats: the check was built on dev, then three parser gaps seen in test
+refusals were fixed; the statement-slot keywords were also drafted from test
+failures. Grading was done by an LLM reviewer, not by a human. A clean held-out set is
+the next step before stronger claims.
+
+### Earlier systems (automatic grading)
+
 | System | Accuracy (95% CI) | Refused | Hallucinated | Evidence in top 5 | Median latency |
 |---|---|---|---|---|---|
 | A: SLM only | 0.12 (0.06 to 0.19) | 0.74 | 0.14 | n/a | 2.3 s |
 | B: dense RAG | 0.30 (0.21 to 0.39) | 0.57 | 0.13 | 0.36 | 2.0 s |
 | C: full system | 0.33 (0.24 to 0.42) | 0.48 | 0.19 | 0.46 | 6.1 s |
 | C_lean: without router and GLiNER | 0.36 (0.27 to 0.46) | 0.43 | 0.21 | 0.48 | 5.2 s |
-| C_lean + statement slots (2026-09-30, default) | 0.39 (0.30 to 0.49) | 0.34 | 0.27 | 0.61 | 5.3 s |
+| C_lean + statement slots (2026-09-30) | 0.39 (0.30 to 0.49) | 0.34 | 0.27 | 0.61 | 5.3 s |
+| C_verified: plus the answer check (2026-10-03, default) | 0.36 (0.27 to 0.46) | 0.45 | 0.19 | 0.61 | 5.4 s |
+
+The automatic grader takes the first number of the gold answer and asks the
+same 4B model to judge prose answers. Reviewed grading (above) disagrees with
+it on about one answered question in six (12 of 66 and 9 of 55), in both
+directions.
 
 Statement slots (query/statement_pages.py): the right filing was found for 99 of 100
 test questions, but its balance sheet, income or cash flow statement often ranked

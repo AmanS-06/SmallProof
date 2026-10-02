@@ -55,6 +55,7 @@ RUN_LABELS = {
     "B_dense_rag_test_answer": "B: dense RAG",
     "C_full_test_answer": "C: full system",
     "C_lean_test_answer": "C_lean: before the answer check",
+    "C_verified_test_answer": "C_verified: with the answer check",
     "C_lean_test_answer_reviewed": "C_lean: before the answer check",
     "C_verified_test_answer_verified_reviewed": "C_verified: with the answer check",
 }
