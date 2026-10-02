@@ -1,4 +1,4 @@
-"""Streamlit demo.
+"""Minimal Streamlit demo. The main demo is demo/web (served by api/server.py).
 
     .venv\\Scripts\\streamlit.exe run demo/app.py
 
@@ -17,7 +17,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 import streamlit as st  # noqa: E402
 
 from core.ollama_server import OnDemandOllama  # noqa: E402
-from core.pipeline import VARIANTS, Pipeline  # noqa: E402
+from core.pipeline import DEFAULT_VARIANT, VARIANTS, Pipeline  # noqa: E402
 
 PACKS = sorted(p.name for p in (Path(__file__).resolve().parent.parent / "packs").iterdir() if (p / "config.yaml").exists())
 
@@ -30,7 +30,7 @@ def load(pack: str):
 
 st.title("Local SLM + Jev-style RAG")
 pack = st.sidebar.selectbox("Domain pack", PACKS)
-variant = st.sidebar.selectbox("System variant", sorted(VARIANTS), index=sorted(VARIANTS).index("C_full"))
+variant = st.sidebar.selectbox("System variant", sorted(VARIANTS), index=sorted(VARIANTS).index(DEFAULT_VARIANT))
 question = st.text_input("Question", "What is the FY2018 capital expenditure amount (in USD millions) for 3M?")
 
 if st.button("Ask") and question.strip():

@@ -1,0 +1,164 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Verified Local RAG</title>
+  <link rel="stylesheet" href="/static/app.css">
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <svg class="logo" viewBox="0 0 32 32" aria-hidden="true"><rect x="3" y="5" width="18" height="22" rx="3"/><path d="M8 12h8M8 17h8M8 22h5"/><circle cx="23" cy="21" r="6"/><path d="m20.5 21 1.8 1.8 3.4-3.6"/></svg>
+      <div>
+        <div class="brand-name">Verified Local RAG</div>
+        <div class="brand-sub">Small models on one laptop. Every number checked in code.</div>
+      </div>
+    </div>
+    <nav class="tabs" role="tablist">
+      <button class="tab active" data-tab="ask" role="tab">Ask</button>
+      <button class="tab" data-tab="eval" role="tab">Evaluation</button>
+      <button class="tab" data-tab="how" role="tab">How it works</button>
+    </nav>
+    <div class="corpus" id="corpus">Loading corpus</div>
+  </header>
+
+  <main>
+    <!-- Ask -->
+    <section class="view active" id="view-ask">
+      <div class="ask-grid">
+        <div class="col-main">
+          <form class="question-card" id="ask-form">
+            <label for="question" class="label">Question about the filings</label>
+            <textarea id="question" rows="3" placeholder="What is the FY2018 capital expenditure amount (in USD millions) for 3M?"></textarea>
+            <div class="question-actions">
+              <div class="examples-head">
+                <span class="label">Try one</span>
+                <button type="button" class="link" id="shuffle">Shuffle</button>
+              </div>
+              <div class="controls">
+                <select id="variant" title="System variant"></select>
+                <button type="submit" class="primary" id="ask-btn">Ask</button>
+              </div>
+            </div>
+            <div class="examples" id="examples"></div>
+          </form>
+
+          <ol class="stages" id="stages">
+            <li data-stage="understand"><span class="dot"></span><div><b>Understand</b><small>company, year, section</small></div><em></em></li>
+            <li data-stage="search"><span class="dot"></span><div><b>Search</b><small>BM25 + dense, fused</small></div><em></em></li>
+            <li data-stage="rerank"><span class="dot"></span><div><b>Rerank</b><small>cross-encoder, top 5</small></div><em></em></li>
+            <li data-stage="write"><span class="dot"></span><div><b>Write</b><small>4B SLM on the GPU</small></div><em></em></li>
+            <li data-stage="verify"><span class="dot"></span><div><b>Verify</b><small>numbers and arithmetic</small></div><em></em></li>
+          </ol>
+
+          <div class="answer-card empty" id="answer-card">
+            <div class="answer-empty">
+              Ask a question to see each stage run. The answer appears only if code can trace every number in it to the
+              documents or to a calculation it has redone.
+            </div>
+          </div>
+        </div>
+
+        <aside class="col-side">
+          <div class="panel">
+            <h3>Query understanding</h3>
+            <div id="tags" class="tags muted">Waiting for a question</div>
+          </div>
+          <div class="panel">
+            <h3>Evidence given to the SLM <span id="evidence-meta" class="muted small"></span></h3>
+            <div id="evidence" class="evidence muted">Five passages, best first, with the reranker's score.</div>
+          </div>
+        </aside>
+      </div>
+    </section>
+
+    <!-- Evaluation -->
+    <section class="view" id="view-eval">
+      <div class="eval-head">
+        <div>
+          <h2>FinanceBench open sample, test split (100 questions)</h2>
+          <p class="muted">84 SEC filings, 31,999 chunks, one shared index. Qwen3 4B Instruct (Q4) writes the answers; everything runs on one
+            laptop. Precision = share of given answers that are right. Numbers come from saved runs on this machine.</p>
+        </div>
+      </div>
+      <div id="compare" class="compare"></div>
+      <div class="legend-row">
+        <span><i class="sw correct"></i>correct</span><span><i class="sw wrong"></i>wrong (answered)</span><span><i class="sw refused"></i>refused</span>
+      </div>
+
+      <h3 class="section-title">Explore a run</h3>
+      <div class="explorer">
+        <div class="explorer-list">
+          <div class="explorer-controls">
+            <select id="run-select"></select>
+            <div class="filters" id="filters">
+              <button class="chip active" data-filter="all">All</button>
+              <button class="chip" data-filter="correct">Correct</button>
+              <button class="chip" data-filter="wrong">Wrong</button>
+              <button class="chip" data-filter="refused">Refused</button>
+            </div>
+            <input id="run-search" type="search" placeholder="Search questions">
+          </div>
+          <div id="run-rows" class="run-rows"></div>
+        </div>
+        <div class="explorer-detail" id="run-detail"><div class="muted">Pick a question to see the answer, the gold answer and the check.</div></div>
+      </div>
+    </section>
+
+    <!-- How it works -->
+    <section class="view" id="view-how">
+      <div class="how">
+        <h2>How a question is answered</h2>
+        <p class="muted">Small CPU models and rules do the deciding. The SLM only writes the final answer from five passages, and
+          code checks it before anyone sees it.</p>
+        <div class="flow">
+          <div class="step"><span>1</span><b>Understand</b><p>Company and year are matched exactly against the corpus vocabulary; a zero-shot
+            classifier picks the statement section. Tags boost, they never filter.</p></div>
+          <div class="step"><span>2</span><b>Search</b><p>BM25 and dense search (bge-small in Chroma), plus a search inside the tagged filing,
+            merged with reciprocal rank fusion.</p></div>
+          <div class="step"><span>3</span><b>Rerank</b><p>A MiniLM cross-encoder orders 30 candidates. If the question needs a balance sheet,
+            income or cash flow statement, that page gets a reserved slot.</p></div>
+          <div class="step"><span>4</span><b>Write</b><p>Qwen3 4B (Ollama, GPU) answers from the top 5 passages with page citations, or says
+            NOT FOUND.</p></div>
+          <div class="step accent"><span>5</span><b>Verify</b><p>Code redoes every written calculation and corrects slips. Every number must be
+            in the passages, in the question, or the result of a checked step. A value must come from the column of the year
+            the sentence names. Hedged or cut-off answers are refused.</p></div>
+        </div>
+        <div class="how-grid">
+          <div class="panel">
+            <h3>Why verify in code</h3>
+            <p>On the test split the 4B model gave 27 wrong answers out of 100 before the check. Most were arithmetic slips, values
+              from the wrong year column, or answers that ended in "NOT FOUND". A model cannot be trusted to grade itself; code can redo
+              arithmetic exactly.</p>
+          </div>
+          <div class="panel">
+            <h3>What the colours mean</h3>
+            <ul class="legend-list">
+              <li><mark class="n quoted">1,577</mark> copied from a passage</li>
+              <li><mark class="n calculated">0.68</mark> a calculation code has redone</li>
+              <li><mark class="n corrected">0.68</mark> the SLM's arithmetic was wrong; code fixed it</li>
+              <li><mark class="n unsupported">6,818</mark> no source: the answer is refused</li>
+              <li><mark class="n question">2</mark> given in the question, or a constant</li>
+            </ul>
+          </div>
+          <div class="panel">
+            <h3>Limits</h3>
+            <p>The check catches numbers with no source, arithmetic slips and wrong year columns. It cannot catch a correct number used for
+              the wrong line item, or a wrong yes/no judgement in prose. Those still need a stronger reader or a human.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <div class="drawer" id="drawer" hidden>
+    <div class="drawer-inner">
+      <button class="close" id="drawer-close" aria-label="Close">Close</button>
+      <div id="drawer-body"></div>
+    </div>
+  </div>
+
+  <script src="/static/app.js"></script>
+</body>
+</html>

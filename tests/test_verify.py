@@ -79,5 +79,12 @@ def test_hedged_and_cut_off_answers_are_refused():
     assert not verify_answer("Capex was $1,577 million", [chunk(CASH_FLOW)], truncated=True).ok
 
 
+def test_page_words_ordinals_and_doubling():
+    assert find_numbers("From page 68, assets were 1,001,425.")[0].value == 1001425.0  # 68 is a page, not an amount
+    assert verify_answer("It raised dividends for 61 consecutive years.", [chunk("the 61st consecutive year")]).ok
+    two_lines = chunk("Five Year Credit Agreement up to $4,200,000,000. 364 Day Credit Agreement up to $4,200,000,000.")
+    assert verify_answer("Each allows $4,200,000,000, so the total is $8,400,000,000.", [two_lines]).ok
+
+
 def test_answers_without_numbers_pass():
     assert verify_answer("Yes, the business is cyclical [p. 5].", [chunk("The business is cyclical.")]).ok

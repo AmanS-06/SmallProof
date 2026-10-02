@@ -60,6 +60,8 @@ class Retrieval:
     confidence: float | None = None
     widened: bool = False
     tags: dict[str, Any] = field(default_factory=dict)
+    scores: dict[str, float] = field(default_factory=dict)  # reranker probability per chunk id
+    statement_ids: list[str] = field(default_factory=list)  # chunks that got a reserved statement slot
 
 
 def _chunk_from_dict(data: dict) -> Chunk:
@@ -383,7 +385,9 @@ class Pipeline:
             final = ordered[:k]
 
         result = Retrieval(chunks=final, candidates=candidates, widened=widen,
-                           tags=tags.as_dict() if isinstance(tags, QueryTags) else {})
+                           tags=tags.as_dict() if isinstance(tags, QueryTags) else {},
+                           scores={key: round(float(value), 4) for key, value in rerank_prob.items()},
+                           statement_ids=[c.id for c in statement_pages])
         if rerank_prob:
             # The evidence score is recorded even with the gate off, so dev runs can calibrate it.
             with profiler.stage("gate"):
@@ -394,11 +398,14 @@ class Pipeline:
         return result
 
     def retrieve_with_fallback(self, query: str, variant: str | dict = "C_full",
-                               profiler: Profiler | None = None) -> Retrieval:
+                               profiler: Profiler | None = None,
+                               on_stage: Callable[[str, dict], None] | None = None) -> Retrieval:
         """Retrieve; if the gate is on and says not sufficient, widen once."""
         flags = VARIANTS[variant] if isinstance(variant, str) else variant
         profiler = profiler or Profiler()
         tags = self.analyze(query, flags, profiler)
+        if on_stage:
+            on_stage("analyzed", {"tags": tags.as_dict(), "timings_ms": dict(profiler.timings_ms)})
         result = self.retrieve(query, flags, profiler, tags=tags)
         if flags["gate"] and result.verdict != Verdict.SUFFICIENT:
             result = self.retrieve(query, flags, profiler, tags=tags, widen=True)
@@ -409,7 +416,7 @@ class Pipeline:
         stage finishes (the demo uses it to show progress)."""
         flags = VARIANTS[variant] if isinstance(variant, str) else variant
         profiler = Profiler()
-        result = self.retrieve_with_fallback(query, flags, profiler)
+        result = self.retrieve_with_fallback(query, flags, profiler, on_stage)
         details = {"tags": result.tags, "widened": result.widened,
                    "chunks": [{"id": c.id, "doc_id": c.doc_id, "page": c.page_start} for c in result.chunks]}
         if on_stage:

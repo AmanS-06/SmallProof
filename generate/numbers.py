@@ -31,8 +31,10 @@ _SCALE = {"billion": 1e9, "bn": 1e9, "b": 1e9, "million": 1e6, "mn": 1e6, "mm": 
 # In parentheses only with a page word: "(1,577)" is an accounting negative.
 _PAGES = r"\d[\d,\s\-–]*(?:,\s*(?:pages?|pp?\.?)\s*\d+)*\s*"
 _CITATION = re.compile(r"\[\s*(?:(?:pages?|pp?\.?)\s*)?" + _PAGES + r"\]|\(\s*(?:pages?|pp?\.?)\s*" + _PAGES + r"\)"
-                       r"|\[\s*(?:pages?|pp?\.?)\s*\d[^\]]*$",  # a citation cut off at the end of the answer
+                       r"|\[\s*(?:pages?|pp?\.?)\s*\d[^\]]*$"  # a citation cut off at the end of the answer
+                       r"|\b(?:on|from|see|in)\s+(?:pages?|p\.)\s*\d+(?:\s*(?:and|,|-)\s*\d+)*",  # "from page 68"
                        re.IGNORECASE)
+_ORDINAL = re.compile(r"(\d)(?:st|nd|rd|th)\b")
 SMALL_INT = 12  # whole numbers up to this, with no unit or currency, are skipped
 
 
@@ -63,8 +65,9 @@ def _is_year(digits: str) -> bool:
 
 
 def find_numbers(text: str, skip_small: bool = True) -> list[Number]:
-    """Every number in the text that could be an amount, in order."""
-    masked = mask_citations(text)
+    """Every number in the text that could be an amount, in order.
+    Ordinals count as numbers ("61st" gives 61, keeping its position)."""
+    masked = _ORDINAL.sub(lambda m: m.group(1) + " " * (len(m.group(0)) - 1), mask_citations(text))
     numbers = []
     for match in _NUMBER.finditer(masked):
         digits, unit = match.group("digits"), (match.group("unit") or "").lower()

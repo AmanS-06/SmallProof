@@ -55,8 +55,10 @@ _OPS = {ast.Add: operator.add, ast.Sub: operator.sub, ast.Mult: operator.mul, as
 @dataclass
 class NumberCheck:
     raw: str  # the number as written in the answer
-    status: str  # quoted, question, calculated, derived, corrected, unsupported, wrong_year
+    status: str  # quoted, question, constant, calculated, derived, corrected, unsupported, wrong_year
     note: str = ""  # where it came from: a page, a calculation, or what is wrong
+    start: int = 0  # position in Verification.text, for highlighting
+    end: int = 0
 
 
 @dataclass
@@ -213,6 +215,7 @@ def _derivations(values: list[float]):
     changes and averages. Yields (result, description)."""
     for a in values:
         yield a, f"{a:g} rounded"
+        yield 2 * a, f"{a:g} + {a:g}"
     for a, b in itertools.permutations(values, 2):
         yield a + b, f"{a:g} + {b:g}"
         yield a - b, f"{a:g} - {b:g}"
@@ -319,6 +322,8 @@ def _check_once(text: str, context: _Context) -> tuple[list[NumberCheck], list[t
         problem = _year_problem(number, text[sentence[0]:sentence[1]], context)
         if problem:
             status[index] = NumberCheck(number.raw, "wrong_year", problem)
+    for index, number in enumerate(numbers):
+        status[index].start, status[index].end = number.start, number.start + len(number.raw)
     return [status[i] for i in range(len(numbers))], wrong
 
 
@@ -362,6 +367,6 @@ def verify_answer(text: str, chunks: Sequence[Chunk], question: str = "", trunca
     if corrections:  # mark corrected results in the report
         corrected = {re.sub(r".* is (\S+), not .*", r"\1", c) for c in corrections}
         for check in checks:
-            if check.status == "calculated" and any(digits in check.raw for digits in corrected):
+            if check.status in ("calculated", "derived") and any(digits in check.raw for digits in corrected):
                 check.status = "corrected"
     return Verification(ok=not reasons, text=text, reasons=reasons, numbers=checks, corrections=corrections)
