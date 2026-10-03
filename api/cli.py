@@ -46,7 +46,8 @@ def cmd_ingest(args) -> None:
     pipeline = Pipeline.from_pack(args.pack)
     paths = _pack_paths(pipeline.config)
     manifest = json.loads(paths["manifest"].read_text(encoding="utf-8"))
-    pdfs = sorted(p for p in paths["pdfs"].glob("*.pdf") if p.stem in manifest)[: args.limit or None]
+    pdfs = sorted(p for p in paths["pdfs"].iterdir() if p.suffix.lower() in (".pdf", ".html", ".htm")
+                  and p.stem in manifest)[: args.limit or None]
     with ThermalGuard.from_config(pipeline.config) as guard:
         stats = pipeline.ingest(pdfs, manifest, guard=guard)
     print(json.dumps({k: v for k, v in stats.items() if k != "settings"}, indent=1))

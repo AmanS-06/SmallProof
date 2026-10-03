@@ -60,7 +60,7 @@ def add_metadata(chunks: Sequence[Chunk], doc_meta: dict[str, dict[str, Any]], s
             first = find_section(chunk.text[:200], patterns)
             section = first or section
             current_section[chunk.doc_id] = section_here
-        metadata = {**{k: str(v) for k, v in doc_meta.get(chunk.doc_id, {}).items()},
+        metadata = {**{k: str(v) for k, v in doc_meta.get(chunk.doc_id, {}).items() if not isinstance(v, list)},
                     "years": ",".join(years_in(chunk.text)), "section": section}
         result.append(replace(chunk, metadata={**chunk.metadata, **metadata}))
     return result
@@ -75,12 +75,17 @@ def build_vocab(chunks: Sequence[Chunk], doc_meta: dict[str, dict[str, Any]]) ->
         if chunk.metadata.get("section"):
             sections[chunk.metadata["section"]] += 1
     fields: dict[str, set] = {}
+    aliases: dict[str, str] = {}  # other names for a company (a ticker, a short name) -> its manifest name
     for meta in doc_meta.values():
         for key, value in meta.items():
-            fields.setdefault(key, set()).add(str(value))
+            if key == "aliases":
+                aliases.update({str(alias): str(meta["company"]) for alias in value})
+            elif not isinstance(value, list):
+                fields.setdefault(key, set()).add(str(value))
     return {
         "years": dict(sorted(years.items())),
         "sections": dict(sections.most_common()),
         "doc_fields": {key: sorted(values) for key, values in fields.items()},
+        "aliases": dict(sorted(aliases.items())),
         "doc_meta": doc_meta,
     }

@@ -324,7 +324,7 @@ class Pipeline:
         tags.entities = results.get("entities") or []
         tags.section, tags.intent = results.get("section"), results.get("intent")
         if flags["tags"]:
-            tags.company = match_company(query, doc_fields.get("company", []), tags.entities)
+            tags.company = match_company(query, doc_fields.get("company", []), tags.entities, self.vocab.get("aliases"))
             tags.year = match_year(query, doc_fields.get("year", []))
         return tags
 

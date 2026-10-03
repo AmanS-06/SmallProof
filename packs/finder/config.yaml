@@ -1,0 +1,66 @@
+# FinDER pack: the held-out set. Merged on top of configs/default.yaml.
+# Data: FinDER (Linq AI Research, CC BY-NC 4.0), 80 questions over 40 10-K filings, sampled and
+# frozen by prepare.py before any system ran on them. Not committed.
+# Everything below "data" is copied unchanged from packs/financebench/config.yaml on 2026-10-03:
+# no setting was tuned on this set.
+
+data:
+  raw_dir: data/raw/finder
+  eval_set: data/raw/finder/eval.jsonl
+  manifest: data/raw/finder/manifest.json
+  pdf_dir: data/raw/finder/docs
+
+vocab:
+  # Section headings in 10-K style filings. Group 1 is the section name.
+  section_patterns:
+    - '^\s*(item\s+\d{1,2}[a-c]?)\b'
+    - '^\s*(consolidated\s+statements?\s+of\s+(?:income|operations|earnings|cash\s+flows|comprehensive\s+income))'
+    - '^\s*(consolidated\s+balance\s+sheets?)'
+
+tags:
+  entity_types: [company, financial metric, year]
+  section_template: "This question is about the {}."
+  sections: # tag label -> words that must appear in a chunk's section name
+    income statement: [income, operations, earnings]
+    balance sheet: [balance sheet]
+    cash flow statement: [cash flows]
+    management discussion and analysis: [item 7]
+    risk factors: [item 1a]
+
+router:
+  # PROVISIONAL intents drafted with an LLM. The brief says Aman defines these; replace when available.
+  template: "{}"
+  intents:
+    metric_lookup: This question asks for a specific reported financial figure.
+    calculation: This question asks to calculate a ratio, margin, growth rate or difference.
+    explanation: This question asks about reasons, risks, strategy or a business description.
+  chunk_types: # which chunk types each intent boosts
+    metric_lookup: [table, numeric]
+    calculation: [table, numeric]
+    explanation: [narrative, definition]
+
+gate: # calibrated on the dev split (80 questions) by `api.cli calibrate`
+  sufficient_threshold: 0.0
+  partial_threshold: 0.0
+
+statements:
+  # Primary statement pages get a reserved slot (query/statement_pages.py).
+  # Tuned with the test split's failures and checked on the dev split.
+  slots: 2 # at most this many statement pages
+  keep_ranked: 3 # they come after this many of the best reranked chunks
+  min_numbers: 15 # a statement page is full of numbers
+  titles: # a line near the top of the page, as a regular expression
+    balance_sheet: '(consolidated\s+)?(statements?\s+of\s+financial\s+(position|condition)|balance\s+sheets?)'
+    cash_flow: '(consolidated\s+)?statements?\s+of\s+cash\s+flows?'
+    income: '(consolidated\s+)?(statements?\s+of\s+(operations|income|earnings)|income\s+statements?)'
+  question_keywords: # a question mentioning any of these needs that statement (word starts)
+    balance_sheet: [balance sheet, total assets, total liabilities, current assets, current liabilities, quick ratio,
+                    current ratio, working capital, inventor, accounts receivable, accounts payable, ppne, pp&e,
+                    "property, plant", shareholders equity, "shareholders' equity", stockholders equity,
+                    "stockholders' equity", total debt, debt to, cash and cash equivalents, goodwill, net assets,
+                    days payable, days sales, dso, dpo, dio]
+    cash_flow: [cash flow, capital expenditure, capex, free cash, dividends paid, dividend paid, repurchase, buyback,
+                operating activities, investing activities, financing activities, depreciation and amortization, d&a]
+    income: [income statement, p&l, revenue, net sales, sales, cogs, cost of goods, cost of sales, cost of revenue,
+             gross margin, gross profit, operating income, operating margin, operating profit, ebit, net income,
+             net earnings, eps, earnings per share, interest expense, effective tax, sg&a, r&d, margin]

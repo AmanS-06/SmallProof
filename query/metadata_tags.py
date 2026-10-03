@@ -37,10 +37,17 @@ class QueryTags:
                 "entities": [tuple(entity) for entity in self.entities]}
 
 
-def match_company(query: str, companies: Sequence[str], entities: Sequence[Entity]) -> tuple[str, float] | None:
+def match_company(query: str, companies: Sequence[str], entities: Sequence[Entity],
+                  aliases: dict[str, str] | None = None) -> tuple[str, float] | None:
+    """A company named in the question. Aliases (from the pack's manifest) map other names to a
+    company; an alias in capitals (a ticker such as ALL or ON) must appear in capitals."""
     lowered = query.lower()
     for name in sorted(companies, key=len, reverse=True):  # longest first: "American Express" before "Express"
         if re.search(rf"(?<!\w){re.escape(name.lower())}(?!\w)", lowered):
+            return name, 1.0
+    for alias, name in sorted((aliases or {}).items(), key=lambda item: -len(item[0])):
+        text, pattern = (query, alias) if alias.isupper() else (lowered, alias.lower())
+        if re.search(rf"(?<!\w){re.escape(pattern)}(?!\w)", text):
             return name, 1.0
     best: tuple[str, float] | None = None
     for entity in entities:

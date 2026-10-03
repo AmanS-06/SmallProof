@@ -20,7 +20,11 @@ def clean_page_text(text: str) -> str:
 
 
 def extract_pages(pdf_path: str | Path, backend: str = "pypdfium2") -> list[str]:
-    """Text of every page. Index 0 is page 1."""
+    """Text of every page. Index 0 is page 1. HTML files use the HTML parser."""
+    if Path(pdf_path).suffix.lower() in (".html", ".htm"):
+        from ingest.parsers.html_text import extract_html_pages
+
+        return extract_html_pages(pdf_path)
     if backend == "pypdfium2":
         import pypdfium2 as pdfium
 
