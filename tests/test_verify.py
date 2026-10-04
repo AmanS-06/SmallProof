@@ -1,6 +1,6 @@
-from core.types import Chunk
-from generate.numbers import find_numbers, same_amount
-from generate.verify import verify_answer
+from smallproof.core.types import Chunk
+from smallproof.generate.numbers import find_numbers, same_amount
+from smallproof.generate.verify import verify_answer
 
 BALANCE = """Consolidated Balance Sheets
 May 31, 2020 May 26, 2019

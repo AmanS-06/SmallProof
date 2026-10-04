@@ -17,8 +17,8 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 
-from core.pipeline import Pipeline  # noqa: E402
-from generate.verify import verify_answer  # noqa: E402
+from smallproof.core.pipeline import Pipeline  # noqa: E402
+from smallproof.generate.verify import verify_answer  # noqa: E402
 
 OFFSETS = (0.02, 0.05, 0.10, 0.25)
 

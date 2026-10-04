@@ -1,6 +1,6 @@
-from core.config import load_config
-from core.types import Chunk
-from query.statement_pages import build_statement_index, question_kinds, reserve_slots
+from smallproof.core.config import load_config
+from smallproof.core.types import Chunk
+from smallproof.query.statement_pages import build_statement_index, question_kinds, reserve_slots
 
 TITLES = {
     "balance_sheet": r"(consolidated\s+)?balance\s+sheets?",

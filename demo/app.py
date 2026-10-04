@@ -12,12 +12,12 @@ from __future__ import annotations
 import sys
 from pathlib import Path
 
-sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "src"))
 
 import streamlit as st  # noqa: E402
 
-from core.ollama_server import OnDemandOllama  # noqa: E402
-from core.pipeline import DEFAULT_VARIANT, VARIANTS, Pipeline  # noqa: E402
+from smallproof.core.ollama_server import OnDemandOllama  # noqa: E402
+from smallproof.core.pipeline import DEFAULT_VARIANT, VARIANTS, Pipeline  # noqa: E402
 
 PACKS = sorted(p.name for p in (Path(__file__).resolve().parent.parent / "packs").iterdir() if (p / "config.yaml").exists())
 
@@ -28,7 +28,7 @@ def load(pack: str):
     return pipeline, OnDemandOllama(pipeline.config)
 
 
-st.title("Local SLM + Jev-style RAG")
+st.title("SmallProof")
 pack = st.sidebar.selectbox("Domain pack", PACKS)
 variant = st.sidebar.selectbox("System variant", sorted(VARIANTS), index=sorted(VARIANTS).index(DEFAULT_VARIANT))
 question = st.text_input("Question", "What is the FY2018 capital expenditure amount (in USD millions) for 3M?")

@@ -63,7 +63,7 @@ def _alnum(text: str) -> str:
 
 def check_page_base(questions: list[dict], sample: int = 60) -> Counter:
     """For each evidence item, is its text on page (n + 1) or page n (1-based)? Counts the answers."""
-    from ingest.parsers.pdf_text import extract_pages
+    from smallproof.ingest.parsers.pdf_text import extract_pages
 
     votes: Counter = Counter()
     page_cache: dict[str, list[str]] = {}

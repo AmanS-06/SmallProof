@@ -16,7 +16,7 @@ import sys
 import time
 
 from common import WARMUP_RUNS, GpuMemorySampler, load_config, load_fixtures, load_sample_chunks, save_result
-from core.profiling import summarize_latencies
+from smallproof.core.profiling import summarize_latencies
 
 TIMED_RUNS = 10  # fewer than other benches: SLM runs heat the GPU
 
@@ -62,8 +62,8 @@ def run_once(ollama, model: str, prompt: str, options: dict) -> dict:
 
 
 def main() -> None:
-    from core.ollama_server import OllamaServer
-    from core.config import load_config as load_full_config
+    from smallproof.core.ollama_server import OllamaServer
+    from smallproof.core.config import load_config as load_full_config
 
     with OllamaServer.from_config(load_full_config()):  # server only lives for this benchmark
         _run()

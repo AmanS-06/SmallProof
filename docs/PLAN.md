@@ -2,6 +2,12 @@
 
 Version 1, 2026-09-27. Status: scaffold created, Phase 0 not started.
 
+2026-10-04: named SmallProof. The library moved under src/smallproof/ (import
+smallproof.core, smallproof.query, ...), pyproject.toml added (editable
+install, `smallproof` CLI), no license yet. Module paths in the log below
+(core/..., query/..., generate/...) predate the move and now live under
+src/smallproof/.
+
 2026-10-03: the answer check (decision 13) and an interactive web demo
 (demo/web, served by api/server.py) added. Headline, test split, reviewed
 grading: precision when answered 0.65 to 0.78 at the same 43 correct; wrong
@@ -145,7 +151,7 @@ needs a calculation.
 
 ### Still open for Aman
 
-- Package name (then move to src/<name>/ and add pyproject.toml).
+- ~~Package name~~ done 2026-10-04: SmallProof (src/smallproof/, pyproject.toml).
 - Intent labels and hand-labelled ground truth: the router's labels in
   packs/financebench/config.yaml are provisional (LLM-drafted), so router
   accuracy and its confusion matrix are not measured yet.
@@ -590,7 +596,7 @@ refuse (the brief says refuse).
 | 2 | Download GLiClass for comparison | 0.2 | Yes if 0.61 GB is acceptable. It settles the long-label-list question with data. |
 | 3 | Install the Ollama app on D: | 0.3 | Yes |
 | 4 | Parser backend and package license | 0.7 | Decide with the 0.5 numbers |
-| 5 | Package name | Phase 1 start | Aman |
+| 5 | Package name | Phase 1 start | Aman: SmallProof (2026-10-04) |
 | 6 | `git init` | Phase 1 start | Yes, local only, no remote until you say |
 | 7 | Corpus setup, splits, grading, Baseline A, unanswerable set | Phase 2 | See Phase 2 |
 | 8 | Intent labels and ground truth | Phase 3 | Aman |

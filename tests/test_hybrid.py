@@ -1,7 +1,7 @@
 import pytest
 
-from core.types import Chunk
-from query.hybrid import fuse_chunks, reciprocal_rank_fusion
+from smallproof.core.types import Chunk
+from smallproof.query.hybrid import fuse_chunks, reciprocal_rank_fusion
 
 
 def test_rrf_prefers_ids_ranked_well_by_both_lists():

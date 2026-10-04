@@ -1,0 +1,46 @@
+[build-system]
+requires = ["setuptools>=69"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "smallproof"
+version = "0.1.0"
+description = "Local-first document QA: small CPU models retrieve, a small LLM answers, code checks the answer."
+readme = "README.md"
+requires-python = ">=3.11"
+# No license yet: all rights reserved.
+# Direct dependencies only; requirements.txt pins the full tested environment.
+# torch is the CPU-only build: install with --extra-index-url https://download.pytorch.org/whl/cpu
+dependencies = [
+    "PyYAML>=6.0",
+    "numpy>=2.0",
+    "torch>=2.4",
+    "transformers>=4.48",
+    "sentence-transformers>=3.0",
+    "gliner>=0.2.20",
+    "chromadb>=1.0",
+    "rank-bm25>=0.2.2",
+    "pypdfium2>=4.30",
+    "pdfplumber>=0.11",
+    "ollama>=0.4",
+    "nvidia-ml-py>=12.0",
+]
+
+[project.optional-dependencies]
+server = ["fastapi>=0.115", "uvicorn>=0.30"]
+demo = ["streamlit>=1.40"]
+pymupdf = ["pymupdf>=1.24"]
+dev = ["pytest>=8.0"]
+
+[project.scripts]
+smallproof = "smallproof.api.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+smallproof = ["generate/prompts/*.txt"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]

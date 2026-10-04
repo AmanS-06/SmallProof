@@ -1,11 +1,11 @@
 import pytest
 
-from core.config import deep_merge, get, load_config
-from core.pipeline import VARIANTS
-from core.types import Chunk, Entity
-from eval.grading import extract_numbers, grade, numeric_grade
-from query.bm25_index import tokenize
-from query.metadata_tags import QueryTags, boost_factors, match_company, match_year
+from smallproof.core.config import deep_merge, get, load_config
+from smallproof.core.pipeline import VARIANTS
+from smallproof.core.types import Chunk, Entity
+from smallproof.eval.grading import extract_numbers, grade, numeric_grade
+from smallproof.query.bm25_index import tokenize
+from smallproof.query.metadata_tags import QueryTags, boost_factors, match_company, match_year
 
 
 def test_deep_merge_and_get():

@@ -2,7 +2,7 @@ import random
 
 import pytest
 
-from eval.splits import _allocate, load_split, save_split, stratified_split
+from smallproof.eval.splits import _allocate, load_split, save_split, stratified_split
 
 
 def make_items():

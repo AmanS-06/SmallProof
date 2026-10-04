@@ -29,7 +29,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT))
 
-from ingest.parsers.html_text import html_pages, xbrl_facts  # noqa: E402
+from smallproof.ingest.parsers.html_text import html_pages, xbrl_facts  # noqa: E402
 
 RAW = ROOT / "data" / "raw" / "finder"
 SEED, N_FILINGS, PER_FILING = 42, 40, 2

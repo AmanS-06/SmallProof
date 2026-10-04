@@ -41,7 +41,7 @@ gate: # calibrated on the dev split (80 questions) by `api.cli calibrate`
   partial_threshold: 0.0
 
 statements:
-  # Primary statement pages get a reserved slot (query/statement_pages.py).
+  # Primary statement pages get a reserved slot (src/smallproof/query/statement_pages.py).
   # Tuned with the test split's failures and checked on the dev split.
   slots: 2 # at most this many statement pages
   keep_ranked: 3 # they come after this many of the best reranked chunks

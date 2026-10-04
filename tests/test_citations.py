@@ -1,5 +1,5 @@
-from core.types import Chunk, Citation
-from generate.citations import check_citations, extract_cited_pages
+from smallproof.core.types import Chunk, Citation
+from smallproof.generate.citations import check_citations, extract_cited_pages
 
 
 def test_extracts_common_citation_formats():

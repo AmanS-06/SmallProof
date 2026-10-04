@@ -1,9 +1,9 @@
-from core.types import Chunk
-from ingest.chunk_tagger import rule_chunk_type, tag_with_rules
-from ingest.chunker import chunk_document, chunk_page
-from ingest.parsers.pdf_tables import clean_table, table_to_texts
-from ingest.parsers.pdf_text import clean_page_text
-from ingest.vocab_builder import add_metadata, build_vocab, find_section, years_in
+from smallproof.core.types import Chunk
+from smallproof.ingest.chunk_tagger import rule_chunk_type, tag_with_rules
+from smallproof.ingest.chunker import chunk_document, chunk_page
+from smallproof.ingest.parsers.pdf_tables import clean_table, table_to_texts
+from smallproof.ingest.parsers.pdf_text import clean_page_text
+from smallproof.ingest.vocab_builder import add_metadata, build_vocab, find_section, years_in
 
 
 def words(text):
@@ -56,7 +56,7 @@ def test_rule_tagger():
 def test_years_and_sections():
     assert years_in("In FY2018 and 2017, not 12018") == ["2017", "2018"]
     patterns = [r"^\s*(item\s+\d{1,2}[a-c]?)\b"]
-    from ingest.vocab_builder import compile_section_patterns
+    from smallproof.ingest.vocab_builder import compile_section_patterns
 
     assert find_section("text\nItem 7. Management's Discussion\nmore", compile_section_patterns(patterns)) == "item 7"
 

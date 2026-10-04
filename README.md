@@ -1,4 +1,4 @@
-# Local SLM + Jev-style RAG (name TBD)
+# SmallProof
 
 A local-first Python library for question answering over documents. Small CPU
 models do the heavy lifting: a zero-shot classifier (the Jev-style decision
@@ -11,6 +11,9 @@ APIs; everything runs on one laptop (RTX 4060 Laptop, 8 GB VRAM).
 Status: Phases 0 to 5 implemented and measured on FinanceBench, plus the
 answer check and an interactive demo; Phase 6 (packaging) partly done. See
 [docs/PLAN.md](docs/PLAN.md) for the plan and decision log.
+
+The library lives in `src/smallproof/`. Paths below are relative to it unless
+they start with a top-level folder (`bench/`, `packs/`, `demo/`, `docs/`).
 
 ## How it works
 
@@ -30,7 +33,7 @@ Query (per question)
      of the tagged filing, that page gets one of the last two slots of the top 5
   4. Evidence gate (score threshold calibrated on dev): widen once, then refuse
   5. The SLM (Qwen3 4B Instruct, Ollama, GPU) answers from the top 5 chunks, citing pages
-  6. Answer check (generate/verify.py, about 3 ms): code redoes every written calculation
+  6. Answer check (`generate/verify.py`, about 3 ms): code redoes every written calculation
      and corrects a wrong result; every number must be in the passages, in the question,
      or the result of a checked step; a value from a multi-year table must sit in the
      column of the year its sentence names; hedged or cut-off answers are refused
@@ -66,7 +69,8 @@ CC BY-NC 4.0 and is never shipped.
 
 ```powershell
 py -3.11 -m venv .venv
-.\.venv\Scripts\python.exe -m pip install -r requirements.txt   # CPU-only torch
+.\.venv\Scripts\python.exe -m pip install -r requirements.txt   # pinned environment, CPU-only torch
+.\.venv\Scripts\python.exe -m pip install -e . --no-deps        # the smallproof package and CLI
 ```
 
 Models: see the pinned `hf download` commands in docs/PLAN.md step 0.2 (they
@@ -77,11 +81,11 @@ go to `models/hf`). Ollama: extract the standalone Windows zip to
 
 ```powershell
 .\.venv\Scripts\python.exe packs\financebench\prepare.py --download --check   # data
-.\.venv\Scripts\python.exe -m api.cli ingest --pack financebench
-.\.venv\Scripts\python.exe -m api.cli ask --pack financebench "What is the FY2018 capital expenditure amount (in USD millions) for 3M?"
-.\.venv\Scripts\python.exe -m api.cli eval --pack financebench --variant C_verified --split test --mode answer
-.\.venv\Scripts\python.exe -m api.cli recheck --pack financebench data\runs\financebench\C_lean_test_answer.jsonl --num-predict 256
-.\.venv\Scripts\python.exe -m uvicorn api.server:app --port 8000               # demo and HTTP API
+.\.venv\Scripts\smallproof.exe ingest --pack financebench
+.\.venv\Scripts\smallproof.exe ask --pack financebench "What is the FY2018 capital expenditure amount (in USD millions) for 3M?"
+.\.venv\Scripts\smallproof.exe eval --pack financebench --variant C_verified --split test --mode answer
+.\.venv\Scripts\smallproof.exe recheck --pack financebench data\runs\financebench\C_lean_test_answer.jsonl --num-predict 256
+.\.venv\Scripts\python.exe -m uvicorn smallproof.api.server:app --port 8000    # demo and HTTP API
 ```
 
 `recheck` applies the current answer check to a saved run without the GPU.
@@ -133,6 +137,10 @@ first four rows ran before the 4-thread cap was introduced.
 | SLM (Qwen3 4B Q4) | GPU | warm: 1.36 s to first token, 53.9 tokens per s, 2.15 s total (1,905-token prompt); 100% on GPU; +3.1 GB VRAM |
 
 ## Results on FinanceBench (test split, 100 questions)
+
+These numbers are not a clean held-out result: parts of the answer check and
+the statement slots were adjusted after looking at test failures (see the
+caveats below). Results on a held-out set (FinDER pack) come next.
 
 84 filings in one shared index. Details, ablations and decisions: docs/PLAN.md.
 
@@ -195,3 +203,8 @@ company tag, which a company outside the corpus never gets).
 
 On 30 unanswerable questions (company not in the corpus) the systems refused
 29 to 30. Metadata tags are the component that matters most for retrieval.
+
+## License
+
+No license yet: all rights reserved. Third-party models and datasets keep
+their own licenses (see Stack).

@@ -38,7 +38,7 @@ os.environ.setdefault("MKL_NUM_THREADS", "4")
 
 import yaml  # noqa: E402
 
-from core.profiling import GpuMemorySampler, summarize_latencies  # noqa: E402,F401
+from smallproof.core.profiling import GpuMemorySampler, summarize_latencies  # noqa: E402,F401
 
 RESULTS_DIR = ROOT / "bench" / "results"
 FIXTURES_FILE = ROOT / "bench" / "fixtures" / "fixtures.json"

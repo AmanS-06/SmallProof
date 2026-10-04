@@ -1,5 +1,5 @@
-from ingest.parsers.html_text import html_pages, xbrl_facts
-from query.metadata_tags import match_company
+from smallproof.ingest.parsers.html_text import html_pages, xbrl_facts
+from smallproof.query.metadata_tags import match_company
 
 FILING = """<html><body>
 <div style="display:none"><ix:header>hidden facts 999</ix:header></div>

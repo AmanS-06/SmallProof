@@ -1,7 +1,7 @@
 import pytest
 
-from core import registry
-from core.interfaces import Reranker
+from smallproof.core import registry
+from smallproof.core.interfaces import Reranker
 
 
 class DummyReranker(Reranker):

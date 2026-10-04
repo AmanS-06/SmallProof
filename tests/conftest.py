@@ -7,8 +7,8 @@ models are missing (added in Phase 1).
 import sys
 from pathlib import Path
 
-# Temporary: put the project root on the import path so `import core` works.
-# Not needed once the package is installable (pyproject.toml, Phase 1).
-PROJECT_ROOT = Path(__file__).resolve().parent.parent
-if str(PROJECT_ROOT) not in sys.path:
-    sys.path.insert(0, str(PROJECT_ROOT))
+# Lets the tests import smallproof without `pip install -e .`
+# (pyproject.toml sets the same pythonpath for pytest).
+SRC = Path(__file__).resolve().parent.parent / "src"
+if str(SRC) not in sys.path:
+    sys.path.insert(0, str(SRC))

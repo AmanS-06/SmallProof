@@ -1,7 +1,7 @@
 import pytest
 
-from core.types import Chunk
-from eval.metrics import (
+from smallproof.core.types import Chunk
+from smallproof.eval.metrics import (
     bootstrap_ci,
     citation_match,
     confusion_matrix,

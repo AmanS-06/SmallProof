@@ -2,7 +2,7 @@ import json
 
 import pytest
 
-from core.types import Chunk, Citation, LabelScore, Verdict
+from smallproof.core.types import Chunk, Citation, LabelScore, Verdict
 
 
 def make_chunk(**overrides):

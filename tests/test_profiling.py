@@ -1,6 +1,6 @@
 import pytest
 
-from core.profiling import Profiler, percentile, summarize_latencies
+from smallproof.core.profiling import Profiler, percentile, summarize_latencies
 
 
 def test_stage_records_and_adds_up():

@@ -1,6 +1,6 @@
-from core.types import Chunk
-from generate.ollama_backend import format_passages
-from generate.table_years import annotate_table_years
+from smallproof.core.types import Chunk
+from smallproof.generate.ollama_backend import format_passages
+from smallproof.generate.table_years import annotate_table_years
 
 INCOME = """Consolidated Statements of Operations
 Year Ended
